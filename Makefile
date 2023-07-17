@@ -1,98 +1,48 @@
-# .SILENT :
+NAME=	build/webserv
 
-# *************************************************************************** #
-#                                    FILES                                    #
-# *************************************************************************** #
+#CMDS
+RM= rm -rf
+CPP= c++
+MKDIR= mkdir -p
 
-NOM			= webserv
-NAME		= $(EXE_DIR)/$(NOM)
-NAME_UP		= $(shell echo $(NOM) | tr '[:lower:]' '[:upper:]')
+#DIRECTORIES
+BUILD=		webserv_code/build
+EXEC_DIR=	webserv_code/exec_dir
+SRCS_DIR=	webserv_code/sources
+OBJS_DIR=	${BUILD}/objects
+DEPS_DIR=	${BUILD}/dependencies
+DIRS= 		${BUILD} ${DEPS_DIR} ${EXEC_DIR} ${OBJS_DIR}
 
-MAIN_DIR	= webserv_code
+#FILES
+SRCS=		${wildcard ${SRCS_DIR}/*.cpp}
+OBJS=		${SRCS:${SRCS_DIR}/%.cpp=${OBJS_DIR}/%.o}
+DEPS=		${OBJS:${OBJS_DIR}/%.o=${DEP_DIR}/%.d}
 
-# *************WEBSERV_CODE************* #
+#FLAGS
+CPPFLAGS=	-Wall -Wextra -Werror -std=c++98
+DEPFLAGS=	-MMD -MP
 
-INCLUDE		= \
-	-I $(MAIN_DIR)/headers							\
-	-I $(MAIN_DIR)/includes
-SRCS		= $(MAIN_DIR)/Sources/main.cpp
+#COMPILER
+CPP= 		c++
 
-# ***************CLIENTS**************** #
+#RULES
+all: ${NAME}
 
-SRCS		+= \
-	# $(MAIN_DIR)/Sources/MainClient.cpp
+${OBJ_DIR}/%.o: ${SRC_DIR}/%.cpp
+	${CPP} ${CPPFLAGS} ${DEPFLAGS} -c $< -o $@
 
+${NAME}: ${DIRS} ${OBJS}
+	${CPP} ${CPPFLAGS} ${OBJS} -o ${NAME}
 
-
-# *************************************************************************** # 
-#                                   FOLDERS                                   #
-# *************************************************************************** #
-
-DEP_DIR = dependencies
-EXE_DIR	= executable
-OBJ_DIR	= objects
-
-DIRS	= $(DEP_DIR) $(EXE_DIR) $(OBJ_DIR)
-MKDIR	= mkdir -p $(DIRS)
-
-# *************************************************************************** #
-#                                     CPP                                     #
-# *************************************************************************** #
-
-CPP			= c++
-CPPFLAGS	= -Wall -Wextra -Werror -g
-CPPFLAGS	+= -std=c++98
-CPPFLAGS	+= #-fsanitize=address -g3
-
-COMPILE		= $(CPP) $(CPPFLAGS) $(DEPFLAGS) $(INCLUDE)
-
-# *************************************************************************** #
-#                                     DEP                                     #
-# *************************************************************************** #
-
-DEP_FILES	= $(addprefix $(DEP_DIR)/, $(SRCS:.cpp=.d))
-
-DEPFLAGS	= -MT $@ -MMD -MP -MF $(DEP_DIR)/$*.d
-
-# *************************************************************************** #
-#                                     OBJ                                     #
-# *************************************************************************** #
-
-OBJ_FILES	= $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
-
-# *************************************************************************** # 
-#                                   COMPILE                                   #
-# *************************************************************************** #
-
-$(OBJ_DIR)/%.o : %.cpp
-	mkdir -p $(dir $@)
-	mkdir -p $(dir $(DEP_DIR)/$*.d)
-	$(COMPILE) -c $< -o $@
-
-# **************************************************************************** # 
-#                                    MAKING                                    #
-# **************************************************************************** #
-
-all : $(DIRS) $(NAME)
-
--include $(DEP_FILES)
-
-$(DIRS) :
-	$(MKDIR)
-
-$(NAME) : $(OBJ_FILES)
-	$(COMPILE) $(OBJ_FILES) -o $(NAME)
+${DIRS}:
+	${MKDIR} ${DIRS}
 
 clean:
-	$(RM) -rf $(DEP_DIR);
-	$(RM) -rf $(OBJ_DIR);
+	${RM} ${BUILD}
 
-fclean : clean
-	$(RM) -rf $(EXE_DIR);
+fclean: clean
+	${RM} ${EXEC_DIR}
 
-re : fclean all
+re: fclean all
 
-run : all
-	./$(NAME) default.conf
-
-.PHONY : all clean fclean re run
+-include ${DEPS}

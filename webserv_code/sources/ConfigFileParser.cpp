@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/17 14:24:54 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/17 18:54:03 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,8 @@ ConfigFileParser::~ConfigFileParser()
 		delete *it;	
 }
 
-// Helper Methods
+// ******************* HELPER METHODS *******************
+
 void	ConfigFileParser::buffering_input_file()
 {
 	std::string read_line;
@@ -39,7 +40,9 @@ void	ConfigFileParser::buffering_input_file()
 	}
 }
 
-// ************ SYNTAX ERROR TESTS ************
+// ******************* SYNTAX CHECKER METHODS *******************
+
+// Main Method
 void	ConfigFileParser::syntax_checker()
 {
 	int	index = 0;
@@ -52,6 +55,7 @@ void	ConfigFileParser::syntax_checker()
 	}
 }
 
+// Server Block Syntax checkers
 int	ConfigFileParser::server_block_syntax_checker(int start)
 {
 	if (strncmp(buffer.c_str() + start, "server", 6))
@@ -136,6 +140,7 @@ int	ConfigFileParser::check_server_token_value(const char *ptr, int offset1, int
 	return (index);
 }
 
+// Location block syntax checkers
 int	ConfigFileParser::location_syntax_checker(int start)
 {
 	bool ret = false;
@@ -223,7 +228,8 @@ int ConfigFileParser::check_location_token(const char *ptr, int index)
 	return (index);
 }
 
-// Main Method
+// ******************* PARSER MAIN METHOD *******************
+
 void	ConfigFileParser::config_file_parsing()
 {
 	try
