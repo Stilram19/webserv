@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/17 10:03:43 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/17 14:24:54 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,74 +39,33 @@ void	ConfigFileParser::buffering_input_file()
 	}
 }
 
-// start => loop : blank.start|server|EOF
-// server => blank.server|{ => server_tokens => }
-// server_tokens => loop : blank.server_tokens|listen|server_name|max_client_body_size|error_page|location
-// listen => blank.listen|
-// server_name => 
-
-// server
-// {
-//     listen     localhost:3011
-//     #server_name            host1
-//     max_client_body_size 50000000
-//     error_page 404 ../public/errors/404.html
-//     error_page 400 ../public/errors/400.html
-//     location  /
-//     {
-//         allow_methods GET POST DELETE
-//         #redirect http://www.google.com
-//         auto_index on
-//         root ../public/
-//         #index page2.html
-//         upload_pass ./uploads
-//         cgi_pass php     /Users/aben-ham/.1337/projects/web_server/cgi_bin/php-cgi
-//         cgi_pass .py /usr/local/bin/python3
-//     }
-//     location /planet {
-//         allow_methods GET
-//         auto_index off
-//         root ../public/planet
-//         upload_pass /Users/aben-ham/.1337/projects/web_server/public/uploads
-//         #index index.html index.php
-//         cgi_pass .php ./cgi-bin/php-cgi
-//     }
-
-//     location /planet/image {
-//         allow_methods GET
-//         auto_index on
-//         root ../public
-//         index index.html
-//         cgi_pass .php ./cgi-bin/php-cgi
-//     }
-
-//     location /planet/image/ {
-//         allow_methods GET
-//         auto_index on
-//         root ../public
-//         index index.html
-//         cgi_pass .php ./cgi-bin/php-cgi
-//     }
-// }
-
-bool ConfigFileParser::is_token(const char *ptr)
+// ************ SYNTAX ERROR TESTS ************
+void	ConfigFileParser::syntax_checker()
 {
-	if (!strncmp(ptr, "listen ", 7))
-		return (true);
-	if (!strncmp(ptr, "server_name ", 12))
-		return (true);
-	if (!strncmp(ptr, "max_client_body_size ", 21))
-		return (true);
-	if (!strncmp(ptr, "error_page ", 11))
-		return (true);
-	return (false);
+	int	index = 0;
+
+	while (buffer[index])
+	{
+		if (isspace(buffer[index]) && ++index)
+			continue ;
+		index = server_block_syntax_checker(index);
+	}
 }
 
-int	check_token_value(const char *ptr)
+int	ConfigFileParser::server_block_syntax_checker(int start)
 {
-	const char *temp = ptr;
-
-	ptr = strchr(ptr, ' ');
+	if (strncmp(buffer.c_str() + start, "server", 6))
+		throw invalid_syntax();
+	while (isspace(buffer[start]))
+		start++;
+	if (buffer[start] != '{')
+		throw invalid_syntax();
+	start = server_tokens_syntax_checker(start);
+	while (isspace(buffer[start]))
+		start++;
+	if (buffer[start] != '}')
+		throw invalid_syntax();
+	return (start + 1);
 }
 
 int	ConfigFileParser::server_tokens_syntax_checker(int start)
@@ -120,52 +79,148 @@ int	ConfigFileParser::server_tokens_syntax_checker(int start)
 			start = strchr(buffer.c_str + start, '\n') - buffer.c_str + 1;
 			continue ;
 		}
-		if (is_token(buffer.c_str() + start))
+		int temp = check_server_token(buffer.c_str, start);
+		if (temp != start)
 		{
-			start = check_token_value(buffer.c_str() + start);
+			start = temp;
 			continue ;
 		}
-		if (!strncmp(buffer.c_str() + start, "location ", 9))
+		if (!strncmp(buffer.c_str() + start, "location", 8))
 		{
-			start = location_syntax_checker();
+			start = location_syntax_checker(start + 8);
 			continue ;
 		}
-		throw invliad_syntax();
-	}
-}
-
-int	ConfigFileParser::server_block_syntax_checker(int start)
-{
-	// checking server context syntax
-	if (strncmp(buffer.c_str() + start, "server", 6))
 		throw invalid_syntax();
-	while (buffer[start])
-	{
-		if (isspace(buffer[start]) && ++index)
-			continue ;
-		if (buffer[start] != '{')
-			throw invalid_syntax();
-		while (buffer[start])
-			start = server_tokens_syntax_checker(start);
-		while (isspace(buffer[start]))
-			start++;
-		if (buffer[start] != '}')
-			throw invalid_syntax();
 	}
 	return (start);
 }
 
-// syntax errors test
-void	ConfigFileParser::syntax_checker()
+int ConfigFileParser::check_server_token(const char *ptr, int index)
 {
-	int	index = 0;
+	if (!strncmp(ptr + index, "listen", 6))
+		return (check_server_token_value(ptr, index, 6));
+	if (!strncmp(ptr + index, "server_name", 11))
+		return (check_server_token_value(ptr, index, 11));
+	if (!strncmp(ptr + index, "max_client_body_size", 20))
+		return (check_server_token_value(ptr, index, 20));
+	if (!strncmp(ptr + index, "error_page", 10))
+		return (check_server_token_value(ptr, index, 10));
+	return (index);
+}
 
-	while (buffer[index])
+int	ConfigFileParser::check_server_token_value(const char *ptr, int offset1, int offset2)
+{
+	int	words_count = 0;
+	int	index = offset1 + offset2;
+
+	if (!isblank(ptr[index]))
+		throw invalid_syntax();
+	while (ptr[index])
 	{
-		if (isspace(buffer[index]) && ++index)
-			continue ;
-		index = server_block_syntax_checker(index);
+		while (isblank(ptr[index]))
+			index++;
+		if (!ptr[index] || ptr[index] == '\n')
+			break ;
+		words_count++;
+		while (ptr[index] && !isspace(ptr[index]))
+			index++;
 	}
+	if (ptr[index] != '\n')
+		throw invalid_syntax();
+	if (count != 1)
+	{
+		if (count == 2 && !strncmp(ptr[offset1], "error_page", 10))
+			return (index);
+		throw invalid_syntax();
+	}
+	return (index);
+}
+
+int	ConfigFileParser::location_syntax_checker(int start)
+{
+	bool ret = false;
+
+	if (!isblank(buffer[start]))
+		throw invalid_syntax();
+	while (isspace(buffer[start]))
+		start++;
+	while (buffer[start] && !isspace(buffer[start]))
+	{
+		start++;
+		ret = true;
+	}
+	while (isspace(buffer[start]))
+		start++;
+	if (buffer[start] != '{')
+		throw invalid_syntax();
+	start = location_tokens_syntax_checker(start);
+	while (isspace(buffer[start]))
+		start++;
+	if (buffer[start] != '}')
+		throw invalid_syntax();
+	return (start);
+}
+
+int ConfigFileParser::location_tokens_syntax_checker(int start)
+{
+	while (buffer[start])
+	{
+		if (isspace(buffer[start] && ++start))
+			continue ;
+		if (buffer[start] == '#')
+		{
+			start = strchr(buffer.c_str + start, '\n') - buffer.c_str + 1;
+			continue ;
+		}
+		int temp = check_location_token(buffer.c_str, start);
+		if (temp != start)
+		{
+			start = temp;
+			continue ;
+		}
+		throw invalid_syntax();
+	}
+}
+
+int	ConfigFileParser::check_location_token_value(const char *ptr, int offset1, int offset2)
+{
+	int	words_count = 0;
+	int	index = offset1 + offset2;
+
+	if (!isblank(ptr[index]))
+		throw invalid_syntax();
+	while (ptr[index])
+	{
+		while (isblank(ptr[index]))
+			index++;
+		if (!ptr[index] || ptr[index] == '\n')
+			break ;
+		words_count++;
+		while (ptr[index] && !isspace(ptr[index]))
+			index++;
+	}
+	if (ptr[index] != '\n')
+		throw invalid_syntax();
+	if (count != 1)
+	{
+		if (count >= 1 && count <= 3 && !strncmp(ptr[offset1], "allowed_methods", 15))
+			return (index);
+		throw invalid_syntax();
+	}
+	return (index);
+}
+
+int ConfigFileParser::check_location_token(const char *ptr, int index)
+{
+	if (!strncmp(ptr + index, "root", 4))
+		return (check_location_token_value(ptr, index, 10));
+	if (!strncmp(ptr + index, "allowed_methods", 15))
+		return (check_location_token_value(ptr, index, 6));
+	if (!strncmp(ptr + index, "redirect", 8))
+		return (check_location_token_value(ptr, index, 11));
+	if (!strncmp(ptr + index, "index", 5))
+		return (check_location_token_value(ptr, index, 20));
+	return (index);
 }
 
 // Main Method
@@ -174,7 +229,7 @@ void	ConfigFileParser::config_file_parsing()
 	try
 	{
 		buffering_input_file();
-		syntax_test();
+		syntax_checker();
 		filling_attributes();
 	}
 	catch (const std::exception &e)
