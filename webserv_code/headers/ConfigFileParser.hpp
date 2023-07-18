@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:23 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/17 18:48:58 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/18 09:16:31 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ class ConfigFileParser
 		};
 	public:
 		// Useful Constructor & Destructor
-		ConfigFileParser(std::string &);
+		ConfigFileParser(const char *);
 		~ConfigFileParser();
 	private:
 		// Helper Methods
@@ -49,19 +49,19 @@ class ConfigFileParser
 		// Syntax checker Methods
 
 		// Syntax checker Main Method
-		void	syntax_checker();
+		void	syntax_checker() const;
 
 		// Server block syntax checkers
-		int		server_block_syntax_checker(int start);
-		int		server_tokens_syntax_checker(int start);
-		int 	check_server_token(const char *ptr, int index);
-		int		check_server_token_value(const char *ptr, int offset1, int offset2);
+		int		server_block_syntax_checker(int start) const;
+		int		server_tokens_syntax_checker(int start) const;
+		int 	check_server_token(const char *ptr, int index) const;
+		int		check_server_token_value(const char *ptr, int offset1, int offset2) const;
 
 		// Location block syntax checkers
-		int		location_syntax_checker(int start);
-		int 	location_tokens_syntax_checker(int start);
-		int		check_location_token_value(const char *ptr, int offset1, int offset2);
-		int 	check_location_token(const char *ptr, int index);
+		int		location_syntax_checker(int start) const;
+		int 	location_tokens_syntax_checker(int start) const;
+		int		check_location_token_value(const char *ptr, int offset1, int offset2) const;
+		int 	check_location_token(const char *ptr, int index) const;
 	public:
 		// Main Method
 		void	config_file_parsing();

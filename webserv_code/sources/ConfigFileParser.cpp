@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/17 18:54:03 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/18 10:32:04 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,77 +19,80 @@ ConfigFileParser::~ConfigFileParser()
 	for (std::vector<VirtualServer *>::iterator it = _VServers.begin(); it != _VServers.end(); it++)
 		delete *it;	
 }
-
 // ******************* HELPER METHODS *******************
 
 void	ConfigFileParser::buffering_input_file()
 {
 	std::string read_line;
-	std::istream input_stream(_filename, ios_base::in);
+	std::ifstream input_stream(_filename);
 
 	if (!input_stream.is_open())
 		throw std::runtime_error("Can't open file!");
 	if (!std::getline(input_stream, read_line))
 		throw std::runtime_error("Empty File!");
-	buffer = read_line;
-	buffer += "\n";
+	_buffer = read_line;
+	_buffer += "\n";
 	while (std::getline(input_stream, read_line))
 	{
-		buffer += read_line;
-		buffer += "\n";
+		_buffer += read_line;
+		_buffer += "\n";
 	}
+	std::cout << _buffer << std::endl;
+	input_stream.close();
 }
 
 // ******************* SYNTAX CHECKER METHODS *******************
 
 // Main Method
-void	ConfigFileParser::syntax_checker()
+void	ConfigFileParser::syntax_checker() const
 {
 	int	index = 0;
 
-	while (buffer[index])
+	while (_buffer[index])
 	{
-		if (isspace(buffer[index]) && ++index)
+		if (isspace(_buffer[index]) && ++index)
 			continue ;
 		index = server_block_syntax_checker(index);
 	}
 }
 
 // Server Block Syntax checkers
-int	ConfigFileParser::server_block_syntax_checker(int start)
+int	ConfigFileParser::server_block_syntax_checker(int start) const
 {
-	if (strncmp(buffer.c_str() + start, "server", 6))
+	if (strncmp(_buffer.c_str() + start, "server", 6))
 		throw invalid_syntax();
-	while (isspace(buffer[start]))
+	start += 6;
+	while (isspace(_buffer[start]))
 		start++;
-	if (buffer[start] != '{')
+	if (_buffer[start] != '{')
 		throw invalid_syntax();
+	start++;
 	start = server_tokens_syntax_checker(start);
-	while (isspace(buffer[start]))
-		start++;
-	if (buffer[start] != '}')
+	if (_buffer[start] != '}')
 		throw invalid_syntax();
 	return (start + 1);
 }
 
-int	ConfigFileParser::server_tokens_syntax_checker(int start)
+int	ConfigFileParser::server_tokens_syntax_checker(int start) const
 {
-	while (buffer[start])
+	while (_buffer[start])
 	{
-		if (isspace(buffer[start] && ++start))
+		if (isspace(_buffer[start]) && ++start)
 			continue ;
-		if (buffer[start] == '#')
+		if (_buffer[start] == '}')
+			return (start);
+		if (_buffer[start] == '#')
 		{
-			start = strchr(buffer.c_str + start, '\n') - buffer.c_str + 1;
+			start = strchr(_buffer.c_str() + start, '\n') - _buffer.c_str() + 1;
 			continue ;
 		}
-		int temp = check_server_token(buffer.c_str, start);
+		int temp = check_server_token(_buffer.c_str(), start);
 		if (temp != start)
 		{
 			start = temp;
 			continue ;
 		}
-		if (!strncmp(buffer.c_str() + start, "location", 8))
+		if (!strncmp(_buffer.c_str() + start, "location", 8))
 		{
 			start = location_syntax_checker(start + 8);
 			continue ;
@@ -99,7 +102,7 @@ int	ConfigFileParser::server_tokens_syntax_checker(int start)
 	return (start);
 }
 
-int ConfigFileParser::check_server_token(const char *ptr, int index)
+int ConfigFileParser::check_server_token(const char *ptr, int index) const
 {
 	if (!strncmp(ptr + index, "listen", 6))
 		return (check_server_token_value(ptr, index, 6));
@@ -107,12 +110,12 @@ int ConfigFileParser::check_server_token(const char *ptr, int index)
 		return (check_server_token_value(ptr, index, 11));
 	if (!strncmp(ptr + index, "max_client_body_size", 20))
 		return (check_server_token_value(ptr, index, 20));
-	if (!strncmp(ptr + index, "error_page", 10))
-		return (check_server_token_value(ptr, index, 10));
+	if (!strncmp(ptr + index, "error_pages", 11))
+		return (check_server_token_value(ptr, index, 11));
 	return (index);
 }
 
-int	ConfigFileParser::check_server_token_value(const char *ptr, int offset1, int offset2)
+int	ConfigFileParser::check_server_token_value(const char *ptr, int offset1, int offset2) const
 {
 	int	words_count = 0;
 	int	index = offset1 + offset2;
@@ -131,9 +134,9 @@ int	ConfigFileParser::check_server_token_value(const char *ptr, int offset1, int
 	}
 	if (ptr[index] != '\n')
 		throw invalid_syntax();
-	if (count != 1)
+	if (words_count != 1)
 	{
-		if (count == 2 && !strncmp(ptr[offset1], "error_page", 10))
+		if (words_count == 2 && !strncmp(ptr + offset1, "error_pages", 11))
 			return (index);
 		throw invalid_syntax();
 	}
@@ -141,43 +144,44 @@ int	ConfigFileParser::check_server_token_value(const char *ptr, int offset1, int
 }
 
 // Location block syntax checkers
-int	ConfigFileParser::location_syntax_checker(int start)
+int	ConfigFileParser::location_syntax_checker(int start) const
 {
 	bool ret = false;
 
-	if (!isblank(buffer[start]))
+	if (!isblank(_buffer[start]))
 		throw invalid_syntax();
-	while (isspace(buffer[start]))
+	while (isspace(_buffer[start]))
 		start++;
-	while (buffer[start] && !isspace(buffer[start]))
+	while (_buffer[start] && !isspace(_buffer[start]))
 	{
 		start++;
 		ret = true;
 	}
-	while (isspace(buffer[start]))
+	while (isspace(_buffer[start]))
 		start++;
-	if (buffer[start] != '{')
+	if (_buffer[start] != '{')
 		throw invalid_syntax();
+	start++;
 	start = location_tokens_syntax_checker(start);
-	while (isspace(buffer[start]))
-		start++;
-	if (buffer[start] != '}')
+	if (_buffer[start] != '}')
 		throw invalid_syntax();
 	return (start);
 }
 
-int ConfigFileParser::location_tokens_syntax_checker(int start)
+int ConfigFileParser::location_tokens_syntax_checker(int start) const
 {
-	while (buffer[start])
+	while (_buffer[start])
 	{
-		if (isspace(buffer[start] && ++start))
+		if (isspace(_buffer[start]) && ++start)
 			continue ;
-		if (buffer[start] == '#')
+		if (_buffer[start] == '}')
+			return (start);
+		if (_buffer[start] == '#')
 		{
-			start = strchr(buffer.c_str + start, '\n') - buffer.c_str + 1;
+			start = strchr(_buffer.c_str() + start, '\n') - _buffer.c_str() + 1;
 			continue ;
 		}
-		int temp = check_location_token(buffer.c_str, start);
+		int temp = check_location_token(_buffer.c_str(), start);
 		if (temp != start)
 		{
 			start = temp;
@@ -185,9 +189,10 @@ int ConfigFileParser::location_tokens_syntax_checker(int start)
 		}
 		throw invalid_syntax();
 	}
+	return (start);
 }
 
-int	ConfigFileParser::check_location_token_value(const char *ptr, int offset1, int offset2)
+int	ConfigFileParser::check_location_token_value(const char *ptr, int offset1, int offset2) const
 {
 	int	words_count = 0;
 	int	index = offset1 + offset2;
@@ -206,16 +211,16 @@ int	ConfigFileParser::check_location_token_value(const char *ptr, int offset1, i
 	}
 	if (ptr[index] != '\n')
 		throw invalid_syntax();
-	if (count != 1)
+	if (words_count != 1)
 	{
-		if (count >= 1 && count <= 3 && !strncmp(ptr[offset1], "allowed_methods", 15))
+		if (words_count >= 1 && words_count <= 3 && !strncmp(ptr + offset1, "allowed_methods", 15))
 			return (index);
 		throw invalid_syntax();
 	}
 	return (index);
 }
 
-int ConfigFileParser::check_location_token(const char *ptr, int index)
+int ConfigFileParser::check_location_token(const char *ptr, int index) const
 {
 	if (!strncmp(ptr + index, "root", 4))
 		return (check_location_token_value(ptr, index, 10));
@@ -236,7 +241,8 @@ void	ConfigFileParser::config_file_parsing()
 	{
 		buffering_input_file();
 		syntax_checker();
-		filling_attributes();
+		std::cout << "Valid Syntax!" << std::endl;
+		// filling_attributes();
 	}
 	catch (const std::exception &e)
 	{
