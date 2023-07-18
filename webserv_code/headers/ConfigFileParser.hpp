@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:23 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/18 09:16:31 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/18 16:22:40 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,11 +44,13 @@ class ConfigFileParser
 	private:
 		// Helper Methods
 		void	buffering_input_file();
+		int		skip_blank(const char *ptr, int start) const;
+		int		skip_spaces(const char *ptr, int start) const;
 
 	private:
 		// Syntax checker Methods
 
-		// Syntax checker Main Method
+		// Syntax checker's Main Method
 		void	syntax_checker() const;
 
 		// Server block syntax checkers
@@ -62,8 +64,15 @@ class ConfigFileParser
 		int 	location_tokens_syntax_checker(int start) const;
 		int		check_location_token_value(const char *ptr, int offset1, int offset2) const;
 		int 	check_location_token(const char *ptr, int index) const;
+	
+	private:
+		// Methods for extracting config infos
+
+		// Extracting config infos Main Method
+		void extracting_config_infos();
+
 	public:
-		// Main Method
+		// ConfigFileParser Main Method
 		void	config_file_parsing();
 };
 

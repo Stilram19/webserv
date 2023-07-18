@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/18 10:32:04 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/18 17:48:53 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,20 @@ ConfigFileParser::~ConfigFileParser()
 		delete *it;	
 }
 // ******************* HELPER METHODS *******************
+
+int ConfigFileParser::skip_blank(const char *ptr, int start) const
+{
+	while (isblank(ptr[start]))
+		start++;
+	return (start);
+}
+
+int	ConfigFileParser::skip_spaces(const char *ptr, int start) const
+{
+	while (isspace(ptr[start]))
+		start++;
+	return (start);
+}
 
 void	ConfigFileParser::buffering_input_file()
 {
@@ -53,6 +67,7 @@ void	ConfigFileParser::syntax_checker() const
 		if (isspace(_buffer[index]) && ++index)
 			continue ;
 		index = server_block_syntax_checker(index);
+		//std::cout << _buffer[index] << std::endl;
 	}
 }
 
@@ -62,8 +77,7 @@ int	ConfigFileParser::server_block_syntax_checker(int start) const
 	if (strncmp(_buffer.c_str() + start, "server", 6))
 		throw invalid_syntax();
 	start += 6;
-	while (isspace(_buffer[start]))
-		start++;
+	start = skip_spaces(_buffer.c_str(), start);
 	if (_buffer[start] != '{')
 		throw invalid_syntax();
 	start++;
@@ -83,7 +97,13 @@ int	ConfigFileParser::server_tokens_syntax_checker(int start) const
 			return (start);
 		if (_buffer[start] == '#')
 		{
-			start = strchr(_buffer.c_str() + start, '\n') - _buffer.c_str() + 1;
+			const char *temp = strchr(_buffer.c_str() + start, '\n');
+
+			if (!temp)
+				temp = strchr(_buffer.c_str() + start, '}');
+			if (!temp)
+				throw invalid_syntax();
+			start = temp - _buffer.c_str() + 1;
 			continue ;
 		}
 		int temp = check_server_token(_buffer.c_str(), start);
@@ -110,8 +130,8 @@ int ConfigFileParser::check_server_token(const char *ptr, int index) const
 		return (check_server_token_value(ptr, index, 11));
 	if (!strncmp(ptr + index, "max_client_body_size", 20))
 		return (check_server_token_value(ptr, index, 20));
-	if (!strncmp(ptr + index, "error_pages", 11))
-		return (check_server_token_value(ptr, index, 11));
+	if (!strncmp(ptr + index, "error_page", 10))
+		return (check_server_token_value(ptr, index, 10));
 	return (index);
 }
 
@@ -122,50 +142,42 @@ int	ConfigFileParser::check_server_token_value(const char *ptr, int offset1, int
 
 	if (!isblank(ptr[index]))
 		throw invalid_syntax();
-	while (ptr[index])
+	while (ptr[index] && ptr[index] != '\n' && ptr[index] != '}')
 	{
-		while (isblank(ptr[index]))
-			index++;
-		if (!ptr[index] || ptr[index] == '\n')
-			break ;
+		index = skip_blank(ptr, index);
 		words_count++;
 		while (ptr[index] && !isspace(ptr[index]))
 			index++;
 	}
-	if (ptr[index] != '\n')
-		throw invalid_syntax();
-	if (words_count != 1)
+	if (!strncmp(ptr + offset1, "error_page", 10))
 	{
-		if (words_count == 2 && !strncmp(ptr + offset1, "error_pages", 11))
+		if (words_count == 2)
 			return (index);
 		throw invalid_syntax();
 	}
+	if (words_count != 1)
+		throw invalid_syntax();
 	return (index);
 }
 
 // Location block syntax checkers
 int	ConfigFileParser::location_syntax_checker(int start) const
 {
-	bool ret = false;
-
 	if (!isblank(_buffer[start]))
 		throw invalid_syntax();
-	while (isspace(_buffer[start]))
+	start = skip_spaces(_buffer.c_str(), start);
+	if (_buffer[start] == '{')
+		throw invalid_syntax();
+	while (_buffer[start] && !isspace(_buffer[start]) && _buffer[start] != '{' && _buffer[start] != '}')
 		start++;
-	while (_buffer[start] && !isspace(_buffer[start]))
-	{
-		start++;
-		ret = true;
-	}
-	while (isspace(_buffer[start]))
-		start++;
+	start = skip_spaces(_buffer.c_str(), start);
 	if (_buffer[start] != '{')
 		throw invalid_syntax();
 	start++;
 	start = location_tokens_syntax_checker(start);
 	if (_buffer[start] != '}')
 		throw invalid_syntax();
-	return (start);
+	return (start + 1);
 }
 
 int ConfigFileParser::location_tokens_syntax_checker(int start) const
@@ -178,7 +190,13 @@ int ConfigFileParser::location_tokens_syntax_checker(int start) const
 			return (start);
 		if (_buffer[start] == '#')
 		{
-			start = strchr(_buffer.c_str() + start, '\n') - _buffer.c_str() + 1;
+			const char *temp = strchr(_buffer.c_str() + start, '\n');
+
+			if (!temp)
+				temp = strchr(_buffer.c_str() + start, '}');
+			if (!temp)
+				throw invalid_syntax();
+			start = temp - _buffer.c_str() + 1;
 			continue ;
 		}
 		int temp = check_location_token(_buffer.c_str(), start);
@@ -199,38 +217,59 @@ int	ConfigFileParser::check_location_token_value(const char *ptr, int offset1, i
 
 	if (!isblank(ptr[index]))
 		throw invalid_syntax();
-	while (ptr[index])
+	while (ptr[index] && ptr[index] != '\n' && ptr[index] != '}')
 	{
-		while (isblank(ptr[index]))
-			index++;
-		if (!ptr[index] || ptr[index] == '\n')
-			break ;
+		index = skip_blank(ptr, index);
 		words_count++;
 		while (ptr[index] && !isspace(ptr[index]))
 			index++;
 	}
-	if (ptr[index] != '\n')
-		throw invalid_syntax();
-	if (words_count != 1)
+	if (!strncmp(ptr + offset1, "cgi", 3))
 	{
-		if (words_count >= 1 && words_count <= 3 && !strncmp(ptr + offset1, "allowed_methods", 15))
+		if (words_count == 2)
 			return (index);
 		throw invalid_syntax();
 	}
+	if (!strncmp(ptr + offset1, "allowed_methods", 15))
+	{
+		if (words_count >= 1 && words_count <= 3)
+			return (index);
+		throw invalid_syntax();
+	}
+	if (words_count != 1)
+		throw invalid_syntax();
 	return (index);
 }
 
 int ConfigFileParser::check_location_token(const char *ptr, int index) const
 {
 	if (!strncmp(ptr + index, "root", 4))
-		return (check_location_token_value(ptr, index, 10));
+		return (check_location_token_value(ptr, index, 4));
 	if (!strncmp(ptr + index, "allowed_methods", 15))
-		return (check_location_token_value(ptr, index, 6));
+		return (check_location_token_value(ptr, index, 15));
 	if (!strncmp(ptr + index, "redirect", 8))
-		return (check_location_token_value(ptr, index, 11));
+		return (check_location_token_value(ptr, index, 8));
 	if (!strncmp(ptr + index, "index", 5))
-		return (check_location_token_value(ptr, index, 20));
+		return (check_location_token_value(ptr, index, 5));
+	if (!strncmp(ptr + index, "directory_listing", 17))
+		return (check_location_token_value(ptr, index, 17));
+	if (!strncmp(ptr + index, "upload_post", 11))
+		return (check_location_token_value(ptr, index, 11));
+	if (!strncmp(ptr + index, "cgi", 3))
+		return (check_location_token_value(ptr, index, 3));
 	return (index);
+}
+
+// ******************* EXTRACTING CONFIG INFOS *******************
+
+void	ConfigFileParser::extracting_config_infos()
+{
+	int index = 0;
+
+	while (_buffer[index])
+	{
+		//index = skip_blank();
+	}
 }
 
 // ******************* PARSER MAIN METHOD *******************
@@ -241,8 +280,8 @@ void	ConfigFileParser::config_file_parsing()
 	{
 		buffering_input_file();
 		syntax_checker();
+		//extracting_config_infos();
 		std::cout << "Valid Syntax!" << std::endl;
-		// filling_attributes();
 	}
 	catch (const std::exception &e)
 	{

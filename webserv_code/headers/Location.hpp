@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:22:34 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/16 17:38:44 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/18 16:13:57 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ class Location
 		std::string _location_match;
 		std::string _root_path;
 		std::string _index_path;
+		std::map<std::string, std::string> _cgi_handler;
 		std::vector<std::string> _allowed_http_methods;
 
 		// Useless Constructors & Copy Assignment
