@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/19 13:01:46 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/19 19:00:14 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,21 @@
 
 // ******************* CONSTRUCTOR & DESTRUCTOR *******************
 
-ConfigFileParser::ConfigFileParser(const char *filename) : _filename(filename) {}
+ConfigFileParser::ConfigFileParser(const char *filename) : _filename(filename)
+{
+	_server_tokens["listen"] = 6;
+	_server_tokens["server_name"] = 11;
+	_server_tokens["max_client_body_size"] = 20;
+	_server_tokens["error_page"] = 10;
+
+	_location_tokens["root"] = 4;
+	_location_tokens["allowed_methods"] = 15;
+	_location_tokens["redirect"] = 8;
+	_location_tokens["index"] = 5;
+	_location_tokens["directory_listing"] = 17;
+	_location_tokens["upload_post"] = 11;
+	_location_tokens["cgi"] = 3;
+}
 
 ConfigFileParser::~ConfigFileParser()
 {
@@ -142,14 +156,11 @@ int	ConfigFileParser::server_tokens_syntax_checker(int start) const
 
 int ConfigFileParser::check_server_token(const char *ptr, int index) const
 {
-	if (!strncmp(ptr + index, "listen", 6))
-		return (check_server_token_value(ptr, index, 6));
-	if (!strncmp(ptr + index, "server_name", 11))
-		return (check_server_token_value(ptr, index, 11));
-	if (!strncmp(ptr + index, "max_client_body_size", 20))
-		return (check_server_token_value(ptr, index, 20));
-	if (!strncmp(ptr + index, "error_page", 10))
-		return (check_server_token_value(ptr, index, 10));
+	for (std::map<std::string, int>::const_iterator it = _server_tokens.begin(); it != _server_tokens.end(); it++)
+	{
+		if (!strncmp(ptr + index, it->first.c_str(), it->second))
+			return (check_server_token_value(ptr, index, it->second));
+	}
 	return (index);
 }
 
@@ -222,20 +233,11 @@ int ConfigFileParser::location_tokens_syntax_checker(int start) const
 
 int ConfigFileParser::check_location_token(const char *ptr, int index) const
 {
-	if (!strncmp(ptr + index, "root", 4))
-		return (check_location_token_value(ptr, index, 4));
-	if (!strncmp(ptr + index, "allowed_methods", 15))
-		return (check_location_token_value(ptr, index, 15));
-	if (!strncmp(ptr + index, "redirect", 8))
-		return (check_location_token_value(ptr, index, 8));
-	if (!strncmp(ptr + index, "index", 5))
-		return (check_location_token_value(ptr, index, 5));
-	if (!strncmp(ptr + index, "directory_listing", 17))
-		return (check_location_token_value(ptr, index, 17));
-	if (!strncmp(ptr + index, "upload_post", 11))
-		return (check_location_token_value(ptr, index, 11));
-	if (!strncmp(ptr + index, "cgi", 3))
-		return (check_location_token_value(ptr, index, 3));
+	for (std::map<std::string, int>::const_iterator it = _location_tokens.begin(); it != _location_tokens.end(); it++)
+	{
+		if (!strncmp(ptr + index, it->first.c_str(), it->second))
+			return (check_server_token_value(ptr, index, it->second));
+	}
 	return (index);
 }
 
@@ -269,7 +271,6 @@ int	ConfigFileParser::check_location_token_value(const char *ptr, int offset1, i
 
 // ******************* EXTRACTING CONFIG INFOS *******************
 
-
 // Extracting config infos Main Method
 void	ConfigFileParser::extracting_config_infos()
 {
@@ -279,10 +280,11 @@ void	ConfigFileParser::extracting_config_infos()
 	{
 		if (isspace(_buffer[index]) && ++index)
 			continue ;
-		index = extract_server_tokens(index + 6);
+		index = extract_server_infos(index + 6);
 	}
 }
 
+// Extracting server config infos
 VirtualServer *ConfigFileParser::new_virtual_server()
 {
 	VirtualServer *new_vs = new VirtualServer();
@@ -291,44 +293,93 @@ VirtualServer *ConfigFileParser::new_virtual_server()
 	return (new_vs);
 }
 
-int ConfigFileParser::extract_server_tokens(int index)
+int ConfigFileParser::extract_server_infos(int index)
 {
 	VirtualServer *vs = new_virtual_server();
 
 	index = _buffer.find('{', index) + 1;
-	index = skip_spaces(_buffer.c_str(), index);
-	index = extract_and_set_attributes(vs, index);
+	index = extract_server_token_values(vs, index);
 	return (index + 1);
 }
 
-int	ConfigFileParser::extract_and_set_attributes(VirtualServer *vs, int index)
+int	ConfigFileParser::extract_server_token_values(VirtualServer *vs, int index)
 {
 	while (_buffer[index])
 	{
 		index = skip_spaces(_buffer.c_str(), index);
 		if (_buffer[index] == '}')
-			return (index);
-		index = extract_token(vs, _buffer.c_str(), index);
+			break ;
+		index = extract_server_token_value(vs, _buffer.c_str(), index);
+		if (!strncmp(_buffer.c_str() + index, "location", 8))
+			index = extract_location_infos(vs, index + 8);
 	}
-}
-
-int	ConfigFileParser::extract_token(VirtualServer *vs, const char *ptr, int index)
-{
-	const char *last = strchr();
-	if (!strncmp(ptr + index, "listen", 6))
-		return (set_server_token_value("listen", ptr + index + 6));
-	if (!strncmp(ptr + index, "server_name", 11))
-		return (set_server_token_value("server_name", ptr + index + 11));
-	if (!strncmp(ptr + index, "max_client_body_size", 20))
-		return (set_server_token_value("max_client_body_size", ptr + index + 20));
-	if (!strncmp(ptr + index, "error_page", 10))
-		return (set_server_token_value("error_page", ptr + index + 10));
 	return (index);
 }
 
-int	ConfigFileParser::set_server_token_value(const std::string &token_type, const std::string &token_value)
+int	ConfigFileParser::extract_server_token_value(VirtualServer *vs, const char *ptr, int index)
 {
-	
+	int end, temp;
+
+	end = _buffer.find(ptr + index, '\n');
+	temp = _buffer.find(ptr + index, '}');
+	if (temp < end)
+		end = temp;
+	for (std::map<std::string, int>::const_iterator it = _server_tokens.begin(); it != _server_tokens.end(); it++)
+	{
+		const char *first = it->first.c_str();
+		if (!strncmp(ptr + index, it->first.c_str(), it->second))
+		{
+			vs->set_server_info(it->first, _buffer.substr(index + it->second, end - index - it->second));
+			return (end);
+		}
+	}
+	return (index);
+}
+
+// Extracting Location config infos
+int ConfigFileParser::extract_location_infos(VirtualServer *vs, int index)
+{
+	int			key_end;
+	Location	*loc;
+
+	index = skip_spaces(_buffer.c_str(), index);
+	key_end = _buffer.find('{', index) - 1;
+	loc = vs->new_location(_buffer.substr(index, key_end));
+	index = key_end + 2;
+	index = extract_location_token_values(vs, loc, index);
+	return (index + 1);
+}
+
+int	ConfigFileParser::extract_location_token_values(VirtualServer *vs, Location *loc, int index)
+{
+	while (_buffer[index])
+	{
+		index = skip_spaces(_buffer.c_str(), index);
+		if (_buffer[index] == '}')
+			break ;
+		index = extract_location_token_value(vs, loc, _buffer.c_str(), index);
+	}
+	return (index);
+}
+
+int	ConfigFileParser::extract_location_token_value(VirtualServer *vs, Location *loc, const char *ptr, int index)
+{
+	int end, temp;
+
+	end = _buffer.find(ptr + index, '\n');
+	temp = _buffer.find(ptr + index, '}');
+	if (temp < end)
+		end = temp;
+	for (std::map<std::string, int>::const_iterator it = _server_tokens.begin(); it != _server_tokens.end(); it++)
+	{
+		const char *first = it->first.c_str();
+		if (!strncmp(ptr + index, it->first.c_str(), it->second))
+		{
+			vs->set_server_info(it->first, _buffer.substr(index + it->second, end - index - it->second), loc);
+			return (end);
+		}
+	}
+	return (index);
 }
 
 // ******************* PARSER MAIN METHOD *******************

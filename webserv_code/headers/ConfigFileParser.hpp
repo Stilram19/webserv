@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:23 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/19 12:52:25 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/19 18:00:28 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,8 @@ class ConfigFileParser
 		std::string						_buffer;
 		std::string						_filename;
 		std::vector<VirtualServer *>	_VServers;
+		std::map<std::string, int>		_server_tokens;
+		std::map<std::string, int>		_location_tokens;
 
 		// Useless Constructors & Assignment
 		ConfigFileParser();
@@ -76,10 +78,17 @@ class ConfigFileParser
 
 		// Extracting config infos Main Method
 		void	extracting_config_infos();
-		int		extract_server_tokens(int index);
-		int		extract_and_set_attributes(VirtualServer *vs, int index);
-		int		extract_token(VirtualServer *vs, const char *ptr, int index);
-		int		set_server_token_value(const std::string &token_type, const char *token_value);
+
+		// Extracting server config infos
+		int		extract_server_infos(int index);
+		int		extract_server_token_values(VirtualServer *vs, int index);
+		int		extract_server_token_value(VirtualServer *vs, const char *ptr, int index);
+
+		// Extracting location config infos
+		int		extract_location_infos(VirtualServer *vs, int index);
+		int		extract_location_token_values(VirtualServer *vs, Location *loc, int index);
+		int		extract_location_token_value(VirtualServer *vs, Location *loc, const char *ptr, int index);
+
 	public:
 		// ConfigFileParser Main Method
 		void	config_file_parsing();
