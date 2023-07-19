@@ -6,19 +6,23 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/18 17:48:53 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/19 13:01:46 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "ConfigFileParser.hpp"
+
+// ******************* CONSTRUCTOR & DESTRUCTOR *******************
 
 ConfigFileParser::ConfigFileParser(const char *filename) : _filename(filename) {}
 
 ConfigFileParser::~ConfigFileParser()
 {
 	for (std::vector<VirtualServer *>::iterator it = _VServers.begin(); it != _VServers.end(); it++)
-		delete *it;	
+		delete *it;
+	_VServers.clear();
 }
+
 // ******************* HELPER METHODS *******************
 
 int ConfigFileParser::skip_blank(const char *ptr, int start) const
@@ -33,6 +37,24 @@ int	ConfigFileParser::skip_spaces(const char *ptr, int start) const
 	while (isspace(ptr[start]))
 		start++;
 	return (start);
+}
+
+int ConfigFileParser::count_and_skip_words(const char *ptr, int *index_ptr) const
+{
+	int index = *index_ptr;
+	int	words_count = 0;
+
+	while (true)
+	{
+		index = skip_blank(ptr, index);
+		if (ptr[index] == '\n' || ptr[index] == '{' || ptr[index] == '}')
+			break ;
+		words_count++;
+		while (ptr[index] != '{' && ptr[index] != '}' && !isspace(ptr[index]))
+			index++;
+	}
+	*index_ptr = index;
+	return (words_count);
 }
 
 void	ConfigFileParser::buffering_input_file()
@@ -99,10 +121,6 @@ int	ConfigFileParser::server_tokens_syntax_checker(int start) const
 		{
 			const char *temp = strchr(_buffer.c_str() + start, '\n');
 
-			if (!temp)
-				temp = strchr(_buffer.c_str() + start, '}');
-			if (!temp)
-				throw invalid_syntax();
 			start = temp - _buffer.c_str() + 1;
 			continue ;
 		}
@@ -142,13 +160,9 @@ int	ConfigFileParser::check_server_token_value(const char *ptr, int offset1, int
 
 	if (!isblank(ptr[index]))
 		throw invalid_syntax();
-	while (ptr[index] && ptr[index] != '\n' && ptr[index] != '}')
-	{
-		index = skip_blank(ptr, index);
-		words_count++;
-		while (ptr[index] && !isspace(ptr[index]))
-			index++;
-	}
+	words_count = count_and_skip_words(ptr, &index);
+	if (ptr[index] == '{')
+		throw invalid_syntax();
 	if (!strncmp(ptr + offset1, "error_page", 10))
 	{
 		if (words_count == 2)
@@ -192,10 +206,6 @@ int ConfigFileParser::location_tokens_syntax_checker(int start) const
 		{
 			const char *temp = strchr(_buffer.c_str() + start, '\n');
 
-			if (!temp)
-				temp = strchr(_buffer.c_str() + start, '}');
-			if (!temp)
-				throw invalid_syntax();
 			start = temp - _buffer.c_str() + 1;
 			continue ;
 		}
@@ -208,37 +218,6 @@ int ConfigFileParser::location_tokens_syntax_checker(int start) const
 		throw invalid_syntax();
 	}
 	return (start);
-}
-
-int	ConfigFileParser::check_location_token_value(const char *ptr, int offset1, int offset2) const
-{
-	int	words_count = 0;
-	int	index = offset1 + offset2;
-
-	if (!isblank(ptr[index]))
-		throw invalid_syntax();
-	while (ptr[index] && ptr[index] != '\n' && ptr[index] != '}')
-	{
-		index = skip_blank(ptr, index);
-		words_count++;
-		while (ptr[index] && !isspace(ptr[index]))
-			index++;
-	}
-	if (!strncmp(ptr + offset1, "cgi", 3))
-	{
-		if (words_count == 2)
-			return (index);
-		throw invalid_syntax();
-	}
-	if (!strncmp(ptr + offset1, "allowed_methods", 15))
-	{
-		if (words_count >= 1 && words_count <= 3)
-			return (index);
-		throw invalid_syntax();
-	}
-	if (words_count != 1)
-		throw invalid_syntax();
-	return (index);
 }
 
 int ConfigFileParser::check_location_token(const char *ptr, int index) const
@@ -260,16 +239,96 @@ int ConfigFileParser::check_location_token(const char *ptr, int index) const
 	return (index);
 }
 
+int	ConfigFileParser::check_location_token_value(const char *ptr, int offset1, int offset2) const
+{
+	int	words_count = 0;
+	int	index = offset1 + offset2;
+
+	if (!isblank(ptr[index]))
+		throw invalid_syntax();
+	words_count = count_and_skip_words(ptr, &index);
+	if (ptr[index] == '{')
+		throw invalid_syntax();
+	if (!strncmp(ptr + offset1, "cgi", 3))
+	{
+		if (words_count == 2)
+			return (index);
+		// std::cout << "HERE: " << words_count << std::endl;
+		throw invalid_syntax();
+	}
+	if (!strncmp(ptr + offset1, "allowed_methods", 15))
+	{
+		if (words_count >= 1 && words_count <= 3)
+			return (index);
+		throw invalid_syntax();
+	}
+	if (words_count != 1)
+		throw invalid_syntax();
+	return (index);
+}
+
 // ******************* EXTRACTING CONFIG INFOS *******************
 
+
+// Extracting config infos Main Method
 void	ConfigFileParser::extracting_config_infos()
 {
 	int index = 0;
 
 	while (_buffer[index])
 	{
-		//index = skip_blank();
+		if (isspace(_buffer[index]) && ++index)
+			continue ;
+		index = extract_server_tokens(index + 6);
 	}
+}
+
+VirtualServer *ConfigFileParser::new_virtual_server()
+{
+	VirtualServer *new_vs = new VirtualServer();
+
+	_VServers.push_back(new_vs);
+	return (new_vs);
+}
+
+int ConfigFileParser::extract_server_tokens(int index)
+{
+	VirtualServer *vs = new_virtual_server();
+
+	index = _buffer.find('{', index) + 1;
+	index = skip_spaces(_buffer.c_str(), index);
+	index = extract_and_set_attributes(vs, index);
+	return (index + 1);
+}
+
+int	ConfigFileParser::extract_and_set_attributes(VirtualServer *vs, int index)
+{
+	while (_buffer[index])
+	{
+		index = skip_spaces(_buffer.c_str(), index);
+		if (_buffer[index] == '}')
+			return (index);
+		index = extract_token(vs, _buffer.c_str(), index);
+	}
+}
+
+int	ConfigFileParser::extract_token(VirtualServer *vs, const char *ptr, int index)
+{
+	const char *last = strchr();
+	if (!strncmp(ptr + index, "listen", 6))
+		return (set_server_token_value("listen", ptr + index + 6));
+	if (!strncmp(ptr + index, "server_name", 11))
+		return (set_server_token_value("server_name", ptr + index + 11));
+	if (!strncmp(ptr + index, "max_client_body_size", 20))
+		return (set_server_token_value("max_client_body_size", ptr + index + 20));
+	if (!strncmp(ptr + index, "error_page", 10))
+		return (set_server_token_value("error_page", ptr + index + 10));
+	return (index);
+}
+
+int	ConfigFileParser::set_server_token_value(const std::string &token_type, const std::string &token_value)
+{
+	
 }
 
 // ******************* PARSER MAIN METHOD *******************

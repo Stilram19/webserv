@@ -1,41 +1,28 @@
-
 server
-
-
 {
-    listen 54dwef
-    max_client_body_size 45
+    listen     localhost:3011
+    #server_name            host1
+    max_client_body_size 50000000
     error_page 404 ../public/errors/404.html
     error_page 400 ../public/errors/400.html
-	location  /
+    location  /
     {
         allowed_methods GET POST DELETE
         #redirect http://www.google.com
         directory_listing on
         root ../public/
         #index page2.html
-        upload_post ./uploads
+        upload_path ./uploads
         cgi php     /Users/aben-ham/.1337/projects/web_server/cgi_bin/php-cgi
         cgi .py /usr/local/bin/python3
     }
-
-	location hgf{
-		#index index.html index.php
-		#index index.html index.php
-		root dsf
-	}
-
-
-	
-	
-	
-	location dsf {
+    location /planet {
         allowed_methods GET
-        directory_listing off
+        auto_index off
         root ../public/planet
-        upload_post /Users/aben-ham/.1337/projects/web_server/public/uploads
+        upload_pass /Users/aben-ham/.1337/projects/web_server/public/uploads
         #index index.html index.php
-        cgi .php ./cgi-bin/php-cgi
+        cgi_pass .php ./cgi-bin/php-cgi
     }
 
     location /planet/image {
@@ -47,15 +34,10 @@ server
     }
 
     location /planet/image/ {
-        allowed_methods GET
+        allow_methods GET
         directory_listing on
         root ../public
         index index.html
         cgi .php ./cgi-bin/php-cgi
     }
-}
-
-server {
-	#sfgsdf}
-	
 }

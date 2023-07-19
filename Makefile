@@ -47,7 +47,7 @@ fclean:
 
 re: fclean all
 
-run: re
+run: all
 	./$(NAME) $(ARGS)
 
 -include $(DEPS)
