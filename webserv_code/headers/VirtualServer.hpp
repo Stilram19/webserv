@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/19 19:21:13 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/19 21:36:17 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,9 @@ class VirtualServer
 		~VirtualServer();
 	private:
 		// Helpers
-		Location *new_location(const std::string &key);
+		int			skip_blank(const char *ptr, int start) const;
+		Location	*new_location(const std::string &key);
+		std::string	my_strtrim(const std::string &input) const;
 
 	public:
 		// Setter's Public Functions
