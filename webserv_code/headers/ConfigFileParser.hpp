@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:23 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/19 21:08:52 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/20 13:12:07 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,14 +40,6 @@ class ConfigFileParser
 				}
 		};
 
-		class bad_input : public std::exception
-		{
-			public:
-				const char *what() const throw ()
-				{
-					return ("ConfigFileParser: Bad Input!");
-				}
-		};
 	public:
 		// Constructor & Destructor
 		ConfigFileParser(const char *);
@@ -78,7 +70,7 @@ class ConfigFileParser
 		int 	location_tokens_syntax_checker(int start) const;
 		int		check_location_token_value(const char *ptr, int offset1, int offset2) const;
 		int 	check_location_token(const char *ptr, int index) const;
-	
+
 	private:
 		// ********************* Extracting config infos *********************
 

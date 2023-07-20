@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/19 19:00:14 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/20 12:52:03 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ ConfigFileParser::~ConfigFileParser()
 	_VServers.clear();
 }
 
-// ******************* HELPER METHODS *******************
+// ******************* GLOBAL HELPER METHODS *******************
 
 int ConfigFileParser::skip_blank(const char *ptr, int start) const
 {
@@ -97,14 +97,19 @@ void	ConfigFileParser::buffering_input_file()
 void	ConfigFileParser::syntax_checker() const
 {
 	int	index = 0;
+	bool is_empty = true;
 
 	while (_buffer[index])
 	{
-		if (isspace(_buffer[index]) && ++index)
-			continue ;
-		index = server_block_syntax_checker(index);
-		//std::cout << _buffer[index] << std::endl;
+		index = skip_spaces(_buffer.c_str(), index);
+		if (_buffer[index])
+		{
+			is_empty = false;
+			index = server_block_syntax_checker(index);
+		}
 	}
+	if (is_empty)
+		throw std::runtime_error("Empty File!");
 }
 
 // Server Block Syntax checkers
@@ -127,8 +132,7 @@ int	ConfigFileParser::server_tokens_syntax_checker(int start) const
 {
 	while (_buffer[start])
 	{
-		if (isspace(_buffer[start]) && ++start)
-			continue ;
+		start = skip_spaces(_buffer.c_str(), start);
 		if (_buffer[start] == '}')
 			return (start);
 		if (_buffer[start] == '#')
@@ -209,8 +213,7 @@ int ConfigFileParser::location_tokens_syntax_checker(int start) const
 {
 	while (_buffer[start])
 	{
-		if (isspace(_buffer[start]) && ++start)
-			continue ;
+		start = skip_spaces(_buffer.c_str(), start);
 		if (_buffer[start] == '}')
 			return (start);
 		if (_buffer[start] == '#')
@@ -255,7 +258,6 @@ int	ConfigFileParser::check_location_token_value(const char *ptr, int offset1, i
 	{
 		if (words_count == 2)
 			return (index);
-		// std::cout << "HERE: " << words_count << std::endl;
 		throw invalid_syntax();
 	}
 	if (!strncmp(ptr + offset1, "allowed_methods", 15))
@@ -271,20 +273,8 @@ int	ConfigFileParser::check_location_token_value(const char *ptr, int offset1, i
 
 // ******************* EXTRACTING CONFIG INFOS *******************
 
-// Extracting config infos Main Method
-void	ConfigFileParser::extracting_config_infos()
-{
-	int index = 0;
+// Helpers
 
-	while (_buffer[index])
-	{
-		if (isspace(_buffer[index]) && ++index)
-			continue ;
-		index = extract_server_infos(index + 6);
-	}
-}
-
-// Extracting server config infos
 VirtualServer *ConfigFileParser::new_virtual_server()
 {
 	VirtualServer *new_vs = new VirtualServer();
@@ -292,6 +282,22 @@ VirtualServer *ConfigFileParser::new_virtual_server()
 	_VServers.push_back(new_vs);
 	return (new_vs);
 }
+
+// Extracting config infos Main Method
+
+void	ConfigFileParser::extracting_config_infos()
+{
+	int index = 0;
+
+	while (_buffer[index])
+	{
+		index = skip_spaces(_buffer.c_str(), index);
+		if (_buffer[index])
+			index = extract_server_infos(index + 6);
+	}
+}
+
+// Extracting server config infos
 
 int ConfigFileParser::extract_server_infos(int index)
 {
@@ -326,17 +332,17 @@ int	ConfigFileParser::extract_server_token_value(VirtualServer *vs, const char *
 		end = temp;
 	for (std::map<std::string, int>::const_iterator it = _server_tokens.begin(); it != _server_tokens.end(); it++)
 	{
-		const char *first = it->first.c_str();
 		if (!strncmp(ptr + index, it->first.c_str(), it->second))
 		{
 			vs->set_server_info(it->first, _buffer.substr(index + it->second, end - index - it->second));
-			return (end);
+			break ;
 		}
 	}
-	return (index);
+	return (end);
 }
 
 // Extracting Location config infos
+
 int ConfigFileParser::extract_location_infos(VirtualServer *vs, int index)
 {
 	int			key_end;
@@ -376,10 +382,10 @@ int	ConfigFileParser::extract_location_token_value(VirtualServer *vs, Location *
 		if (!strncmp(ptr + index, it->first.c_str(), it->second))
 		{
 			vs->set_server_info(it->first, _buffer.substr(index + it->second, end - index - it->second), loc);
-			return (end);
+			break ;
 		}
 	}
-	return (index);
+	return (end);
 }
 
 // ******************* PARSER MAIN METHOD *******************

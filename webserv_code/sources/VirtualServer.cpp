@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/19 21:34:14 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/20 14:05:01 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ VirtualServer::~VirtualServer()
 
 // ******************* Helpers *******************
 
+// public
+
 Location *VirtualServer::new_location(const std::string &key)
 {
 	// checking if the key is valid
@@ -42,6 +44,8 @@ Location *VirtualServer::new_location(const std::string &key)
 	return (n_loc);
 }
 
+// private
+
 int VirtualServer::skip_blank(const char *ptr, int start) const
 {
 	while (isblank(ptr[start]))
@@ -49,20 +53,32 @@ int VirtualServer::skip_blank(const char *ptr, int start) const
 	return (start);
 }
 
-std::string VirtualServer::my_strtrim(const std::string &input) const
+bool VirtualServer::is_unsigned_int(const std::string &str) const
 {
-	int start = skip_blank(value.c_str(), 0);
-	int end = input.find('\n', start);
-	int	temp = input.find('}', start);
+	int	start = 0;
 
-	if (temp < end)
-		end = temp;
-	return (input.substr(start, end - start));
+	if (str.empty() || str[0] == '-')
+		return (false);
+	if (str[0] == '+')
+		start = 1;
+	for (int i = start; str[i]; i++)
+	{
+		if (!isdigit(str[i]))
+			return (false);
+	}
+	return (true);
+}
+
+const std::string my_trim(const std::string &str) const
+{
+	int start = skip_blank(str.c_str(), 0);
+
+	return (str.c_str() + start);
 }
 
 // ******************* Setters *******************
 
-// Setters Main Function
+// Setters Public Function
 
 void VirtualServer::set_server_info(const std::string &info_type, const std::string &info, Location *location = NULL)
 {
@@ -75,46 +91,46 @@ void VirtualServer::set_server_info(const std::string &info_type, const std::str
 	{
 		if (it->first == info_type)
 		{
-			(this->*(it->second))(info);
+			(this->*(it->second))(my_trim(info));
 			return ;
 		}
 	}
 }
 
-void VirtualServer::set_directory_listing(const std::string &input)
-{
-	int start = skip_blank(value.c_str(), 0);
-	int end = input.find('\n', start);
-	int	temp = input.find('}', start);
-	std::string value;
+// Private Setters
 
-	if (temp < end)
-		end = temp;
-	value = input.substr(start, end - start);
-	
-}
-
-void VirtualServer::set_redirect_path(const std::string &)
+void VirtualServer::set_max_client_body_size(const std::string &info)
 {
+	if (!is_unsigned_int(info))
+		throw bad_input("Invalid Max client body size!");
+	std::stringstream s;
+
+	info >> s;
+	s >> _set_max_client_body_size;
+	// check if the value is within the range
 
 }
 
-void VirtualServer::set_root_path(const std::string &)
+void VirtualServer::set_server_name(const std::string &info)
 {
-
+	// You can parse the name
+	_server_name = info;
 }
 
-void VirtualServer::set_index_path(const std::string &)
+void VirtualServer::set_listen_infos(const std::string &input)
 {
+	int address_end = input.find(':');
 
+	if (address_end == string::npos)
+		throw bad_input("':' required to separate the address and the port!");
+	_host_address = input.substr(0, address_end);
+	_port_number = input.substr(address_end + 1);
+	// check if the values are valid
 }
 
-void VirtualServer::cgi_handler(const std::string &, const std::string &)
+void VirtualServer::set_error_page_path(const std::string &input)
 {
+	int start = 0;
 
-}
-
-void VirtualServer::_allowed_http_method(const std::string &)
-{
 	
 }

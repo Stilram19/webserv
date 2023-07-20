@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/19 21:36:17 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/20 13:35:06 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,18 +35,42 @@ class VirtualServer
 		// Useless Constructors and copy Assignment
 		VirtualServer(const VirtualServer &);
 		VirtualServer &operator=(const VirtualServer &);
+
+		// Exceptions
+		class bad_input : public std::exception
+		{
+			private:
+				// Attributes
+				std::string _message;
+
+				// Can't throw without message
+				bad_input();
+			public:
+				bad_input(const char *message)
+				{
+					_message = "VirtualServer: Bad Input: ";
+					_message += message;
+				}
+
+				const char *what() const throw ()
+				{
+					return (_message.c_str());
+				}
+		};
 	public:
 		// Constructor & Destructor
 		VirtualServer();
 		~VirtualServer();
-	private:
-		// Helpers
-		int			skip_blank(const char *ptr, int start) const;
+	public:
+		// Public Helpers
 		Location	*new_location(const std::string &key);
-		std::string	my_strtrim(const std::string &input) const;
+	private:
+		// Private Helpers
+		int			skip_blank(const char *ptr, int start) const;
+		bool		is_unsigned_int(const std::string &str) const;
 
 	public:
-		// Setter's Public Functions
+		// Setter's Public Methods
 		void set_server_info(const std::string &info_type, const std::string &info, Location *location = NULL);
 	private:
 		// Setters
