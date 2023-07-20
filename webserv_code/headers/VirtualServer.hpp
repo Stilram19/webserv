@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/20 13:35:06 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/20 20:46:14 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,12 +24,12 @@ class VirtualServer
 		typedef void (VirtualServer::*PtrToSetter)(const std::string &);
 	private:
 		// Attributes
-		unsigned int _max_client_body_size;
-		std::string _server_name;
-		std::string _port_number;
-		std::string _host_address;
+		unsigned int	_max_client_body_size;
+		std::string		_server_name;
+		std::string		_port_number;
+		std::string 	_host_address;
 		std::map<std::string, PtrToSetter> _setters;
-		std::map<int, std::string> _error_pages_paths;
+		std::map<int, std::string> _error_pages;
 		std::map<std::string, Location *> _locations;
 
 		// Useless Constructors and copy Assignment
@@ -48,7 +48,7 @@ class VirtualServer
 			public:
 				bad_input(const char *message)
 				{
-					_message = "VirtualServer: Bad Input: ";
+					_message = "ConfigFileParser: Server Bad Input: ";
 					_message += message;
 				}
 
@@ -66,8 +66,11 @@ class VirtualServer
 		Location	*new_location(const std::string &key);
 	private:
 		// Private Helpers
-		int			skip_blank(const char *ptr, int start) const;
-		bool		is_unsigned_int(const std::string &str) const;
+		int					skip_blank(const char *ptr, int start) const;
+		bool				is_unsigned_int(const std::string &str) const;
+		bool				is_error_number(int input) const;
+		int					my_stoi(const std::string &str) const;
+		const std::string	my_trim(const std::string &str) const;
 
 	public:
 		// Setter's Public Methods

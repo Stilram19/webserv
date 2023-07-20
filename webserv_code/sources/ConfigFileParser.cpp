@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/20 12:52:03 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/20 17:43:41 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,13 @@
 
 ConfigFileParser::ConfigFileParser(const char *filename) : _filename(filename)
 {
+	// Server Tokens
 	_server_tokens["listen"] = 6;
 	_server_tokens["server_name"] = 11;
 	_server_tokens["max_client_body_size"] = 20;
 	_server_tokens["error_page"] = 10;
 
+	// Location Tokens
 	_location_tokens["root"] = 4;
 	_location_tokens["allowed_methods"] = 15;
 	_location_tokens["redirect"] = 8;
