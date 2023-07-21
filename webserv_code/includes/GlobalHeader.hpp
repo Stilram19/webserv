@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:06:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/16 18:22:59 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/21 10:05:59 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@ class VirtualServer;
 class Location;
 
 # include "include.hpp"
+
+# include "ParsingHelpers.hpp"
 
 # include "ConfigFileParser.hpp"
 

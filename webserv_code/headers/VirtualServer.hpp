@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/20 20:46:14 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/21 12:59:50 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,24 +39,13 @@ class VirtualServer
 		// Exceptions
 		class bad_input : public std::exception
 		{
-			private:
-				// Attributes
-				std::string _message;
-
-				// Can't throw without message
-				bad_input();
 			public:
-				bad_input(const char *message)
+				const char *what() const throw()
 				{
-					_message = "ConfigFileParser: Server Bad Input: ";
-					_message += message;
-				}
-
-				const char *what() const throw ()
-				{
-					return (_message.c_str());
+					return ("ConfigFileParser: Server Bad input!");
 				}
 		};
+
 	public:
 		// Constructor & Destructor
 		VirtualServer();

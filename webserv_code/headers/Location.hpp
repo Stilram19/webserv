@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:22:34 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/20 18:58:08 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/21 13:00:25 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,28 +38,20 @@ class Location
 		// Excpetions
 		class bad_input : public std::exception
 		{
-			private:
-				// Attributes
-				std::string _message;
-
-				// Can't throw without message
-				bad_input();
 			public:
-				bad_input(const char *message)
+				const char *what() const throw()
 				{
-					_message = "ConfigFileParser: Location Bad Input: ";
-					_message += message;
-				}
-
-				const char *what() const throw ()
-				{
-					return (_message.c_str());
+					return ("ConfigFileParser: Location Bad input!");
 				}
 		};
+
 	public:
 		// Constructor & Destructor
 		Location();
 		~Location();
+	private:
+		// helpers
+		bool is_http_method(const std::string &input) const;
 	public:
 		// Setters Public Method
 		void set_location_info(const std::string &info_type, const std::string &info);

@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/20 17:43:41 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/21 13:01:04 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,20 +41,6 @@ ConfigFileParser::~ConfigFileParser()
 
 // ******************* GLOBAL HELPER METHODS *******************
 
-int ConfigFileParser::skip_blank(const char *ptr, int start) const
-{
-	while (isblank(ptr[start]))
-		start++;
-	return (start);
-}
-
-int	ConfigFileParser::skip_spaces(const char *ptr, int start) const
-{
-	while (isspace(ptr[start]))
-		start++;
-	return (start);
-}
-
 int ConfigFileParser::count_and_skip_words(const char *ptr, int *index_ptr) const
 {
 	int index = *index_ptr;
@@ -62,7 +48,7 @@ int ConfigFileParser::count_and_skip_words(const char *ptr, int *index_ptr) cons
 
 	while (true)
 	{
-		index = skip_blank(ptr, index);
+		index = ParsingHelpers::skip_blank(ptr, index);
 		if (ptr[index] == '\n' || ptr[index] == '{' || ptr[index] == '}')
 			break ;
 		words_count++;
@@ -103,7 +89,7 @@ void	ConfigFileParser::syntax_checker() const
 
 	while (_buffer[index])
 	{
-		index = skip_spaces(_buffer.c_str(), index);
+		index = ParsingHelpers::skip_spaces(_buffer.c_str(), index);
 		if (_buffer[index])
 		{
 			is_empty = false;
@@ -120,7 +106,7 @@ int	ConfigFileParser::server_block_syntax_checker(int start) const
 	if (strncmp(_buffer.c_str() + start, "server", 6))
 		throw invalid_syntax();
 	start += 6;
-	start = skip_spaces(_buffer.c_str(), start);
+	start = ParsingHelpers::skip_spaces(_buffer.c_str(), start);
 	if (_buffer[start] != '{')
 		throw invalid_syntax();
 	start++;
@@ -134,7 +120,7 @@ int	ConfigFileParser::server_tokens_syntax_checker(int start) const
 {
 	while (_buffer[start])
 	{
-		start = skip_spaces(_buffer.c_str(), start);
+		start = ParsingHelpers::skip_spaces(_buffer.c_str(), start);
 		if (_buffer[start] == '}')
 			return (start);
 		if (_buffer[start] == '#')
@@ -196,12 +182,12 @@ int	ConfigFileParser::location_syntax_checker(int start) const
 {
 	if (!isblank(_buffer[start]))
 		throw invalid_syntax();
-	start = skip_spaces(_buffer.c_str(), start);
+	start = ParsingHelpers::skip_spaces(_buffer.c_str(), start);
 	if (_buffer[start] == '{')
 		throw invalid_syntax();
 	while (_buffer[start] && !isspace(_buffer[start]) && _buffer[start] != '{' && _buffer[start] != '}')
 		start++;
-	start = skip_spaces(_buffer.c_str(), start);
+	start = ParsingHelpers::skip_spaces(_buffer.c_str(), start);
 	if (_buffer[start] != '{')
 		throw invalid_syntax();
 	start++;
@@ -215,7 +201,7 @@ int ConfigFileParser::location_tokens_syntax_checker(int start) const
 {
 	while (_buffer[start])
 	{
-		start = skip_spaces(_buffer.c_str(), start);
+		start = ParsingHelpers::skip_spaces(_buffer.c_str(), start);
 		if (_buffer[start] == '}')
 			return (start);
 		if (_buffer[start] == '#')
@@ -293,7 +279,7 @@ void	ConfigFileParser::extracting_config_infos()
 
 	while (_buffer[index])
 	{
-		index = skip_spaces(_buffer.c_str(), index);
+		index = ParsingHelpers::skip_spaces(_buffer.c_str(), index);
 		if (_buffer[index])
 			index = extract_server_infos(index + 6);
 	}
@@ -314,7 +300,7 @@ int	ConfigFileParser::extract_server_token_values(VirtualServer *vs, int index)
 {
 	while (_buffer[index])
 	{
-		index = skip_spaces(_buffer.c_str(), index);
+		index = ParsingHelpers::skip_spaces(_buffer.c_str(), index);
 		if (_buffer[index] == '}')
 			break ;
 		index = extract_server_token_value(vs, _buffer.c_str(), index);
@@ -350,7 +336,7 @@ int ConfigFileParser::extract_location_infos(VirtualServer *vs, int index)
 	int			key_end;
 	Location	*loc;
 
-	index = skip_spaces(_buffer.c_str(), index);
+	index = ParsingHelpers::skip_spaces(_buffer.c_str(), index);
 	key_end = _buffer.find('{', index) - 1;
 	loc = vs->new_location(_buffer.substr(index, key_end));
 	index = key_end + 2;
@@ -362,7 +348,7 @@ int	ConfigFileParser::extract_location_token_values(VirtualServer *vs, Location 
 {
 	while (_buffer[index])
 	{
-		index = skip_spaces(_buffer.c_str(), index);
+		index = ParsingHelpers::skip_spaces(_buffer.c_str(), index);
 		if (_buffer[index] == '}')
 			break ;
 		index = extract_location_token_value(vs, loc, _buffer.c_str(), index);
@@ -380,7 +366,6 @@ int	ConfigFileParser::extract_location_token_value(VirtualServer *vs, Location *
 		end = temp;
 	for (std::map<std::string, int>::const_iterator it = _server_tokens.begin(); it != _server_tokens.end(); it++)
 	{
-		const char *first = it->first.c_str();
 		if (!strncmp(ptr + index, it->first.c_str(), it->second))
 		{
 			vs->set_server_info(it->first, _buffer.substr(index + it->second, end - index - it->second), loc);
@@ -398,8 +383,8 @@ void	ConfigFileParser::config_file_parsing()
 	{
 		buffering_input_file();
 		syntax_checker();
+		std::cout << "*********** VALID SYNTAX! **********" << std::endl;
 		//extracting_config_infos();
-		std::cout << "Valid Syntax!" << std::endl;
 	}
 	catch (const std::exception &e)
 	{

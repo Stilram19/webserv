@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/20 20:55:20 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/21 13:10:42 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,14 @@
 
 // ******************* CONSTRUCTOR & DESTRUCTOR *******************
 
-VirtualServer::VirtualServer() : _max_client_body_size(10000)
+VirtualServer::VirtualServer() : _max_client_body_size(4294967295)
 {
 	// Setters
 
-	_setters["max_client_body_size"] = VirtualServer::set_max_client_body_size;
-	_setters["server_name"] = VirtualServer::set_server_name;
-	_setters["listen"] = VirtualServer::set_listen_infos;
-	_setters["error_page_path"] = VirtualServer::set_error_page_path;
+	_setters["max_client_body_size"] = &VirtualServer::set_max_client_body_size;
+	_setters["server_name"] = &VirtualServer::set_server_name;
+	_setters["listen"] = &VirtualServer::set_listen_infos;
+	_setters["error_page_path"] = &VirtualServer::set_error_page_path;
 
 	// default error pages
 }
@@ -38,32 +38,11 @@ VirtualServer::~VirtualServer()
 
 Location *VirtualServer::new_location(const std::string &key)
 {
-	// checking if the key is valid
+	// to handle: the key is empty
 	Location *n_loc = new Location();
 
 	_locations[key] = n_loc;
 	return (n_loc);
-}
-
-// private
-
-int VirtualServer::skip_blank(const char *ptr, int start) const
-{
-	while (isblank(ptr[start]))
-		start++;
-	return (start);
-}
-
-bool VirtualServer::is_unsigned_int(const std::string &str) const
-{
-	if (str.empty())
-		return (false);
-	for (int i = 0; str[i]; i++)
-	{
-		if (!isdigit(str[i]))
-			return (false);
-	}
-	return (true);
 }
 
 bool VirtualServer::is_error_number(int input) const
@@ -78,32 +57,11 @@ bool VirtualServer::is_error_number(int input) const
 	return (false);
 }
 
-int VirtualServer::my_stoi(const std::string &str) const
-{
-	int					ret;
-	std::stringstream	s;
-
-	s << str;
-	s >> ret;
-	return (ret);
-}
-
-const std::string VirtualServer::my_trim(const std::string &str) const
-{
-	int	start, end;
-
-	start = skip_blank(str.c_str(), 0);
-	end = start;
-	while (!isblank(str[end]))
-		end++;
-	return (str.substr(start, end - start));
-}
-
 // ******************* Setters *******************
 
 // Setters Public Function
 
-void VirtualServer::set_server_info(const std::string &info_type, const std::string &info, Location *location = NULL)
+void VirtualServer::set_server_info(const std::string &info_type, const std::string &info, Location *location)
 {
 	if (location)
 	{
@@ -114,7 +72,7 @@ void VirtualServer::set_server_info(const std::string &info_type, const std::str
 	{
 		if (it->first == info_type)
 		{
-			(this->*(it->second))(my_trim(info));
+			(this->*(it->second))(ParsingHelpers::my_trim(info));
 			return ;
 		}
 	}
@@ -126,11 +84,11 @@ void VirtualServer::set_max_client_body_size(const std::string &info)
 {
 	std::string max = "4294967295";
 
-	if (!is_unsigned_int(info))
-		throw bad_input("Invalid Max client body size!");
+	if (!ParsingHelpers::is_unsigned_int(info))
+		throw bad_input();
 	if (info.length() > max.length() || (info.length() == max.length() && strcmp(max.c_str(), info.c_str()) < 0))
-		throw bad_input("Too large value for client body size!");
-	_max_client_body_size = my_stoi(info);
+		throw bad_input();
+	_max_client_body_size = ParsingHelpers::my_stoi(info);
 }
 
 void VirtualServer::set_server_name(const std::string &info)
@@ -140,14 +98,14 @@ void VirtualServer::set_server_name(const std::string &info)
 
 void VirtualServer::set_listen_infos(const std::string &input)
 {
-	int address_end = input.find(':');
+	size_t address_end = input.find(':');
 
 	if (address_end == std::string::npos)
-		throw bad_input("':' required to separate the address and the port!");
+		throw bad_input();
 	_host_address = input.substr(0, address_end);
 	_port_number = input.substr(address_end + 1);
 
-	// Checking if the given host_address and the port_number are resolvable
+	// Checking if the given host_address and the port number are resolvable
 	struct addrinfo hints;
 	struct addrinfo *res;
 
@@ -158,29 +116,27 @@ void VirtualServer::set_listen_infos(const std::string &input)
 	int ret = getaddrinfo(_host_address.c_str(), _port_number.c_str(), &hints, &res);
 	freeaddrinfo(res);
 	if (ret)
-		throw bad_input("Invalid port or host_address (or host_name)!");
+		throw bad_input();
 }
 
 void VirtualServer::set_error_page_path(const std::string &input)
 {
 	int start = 0, end = 0;
 	int	error_number;
-	const char *error_number_message("Invalid Error Number!");
 	std::string error_number_str, error_page;
 
 	while (!isblank(input[end]))
 		end++;
 	error_number_str = input.substr(start, end);
-	start = skip_blank(input.c_str(), end);
+	start = ParsingHelpers::skip_blank(input.c_str(), end);
 	error_page = input.substr(start);
 
 	// error number parsing
-	if (error_number_str.length() != 3 || !is_unsigned_int(error_number_str))
-		throw bad_input(error_number_message);
-	error_number = my_stoi(error_number_str);
+	if (error_number_str.length() != 3 || !ParsingHelpers::is_unsigned_int(error_number_str))
+		throw bad_input();
+	error_number = ParsingHelpers::my_stoi(error_number_str);
 	if (!is_error_number(error_number))
-		throw bad_input(error_number_message);
-	// error page parsing
+		throw bad_input();
 
 	// setting the pair into the map
 	_error_pages[error_number] = error_page;
