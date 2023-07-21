@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 18:34:57 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/21 21:02:18 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,6 @@ class VirtualServer
 	private:
 		// Private Helpers
 		bool	is_error_number(int input) const;
-		void	dispaly_pair(std::pair<int, std::string> &error_page) const;
 
 	public:
 		// Setter's Public Methods

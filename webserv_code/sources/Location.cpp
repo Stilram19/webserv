@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 17:08:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 19:13:05 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/21 21:17:52 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,10 +109,6 @@ void Location::set_root_path(const std::string &input)
 
 void Location::set_index_path(const std::string &input)
 {
-	int mode = F_OK | R_OK | W_OK;
-
-	if (access(input.c_str(), mode))
-		throw std::runtime_error("Invalid index path!");
 	_index_path = input;
 }
 
@@ -199,7 +195,7 @@ const std::string	Location::get_cgi_handler(const std::string &extension) const
 
 		return (cgi_handler);
 	}
-	catch(const std::exception& e)
+	catch(std::out_of_range& e)
 	{
 		return ("");
 	}
