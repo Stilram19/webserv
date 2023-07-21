@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:22:34 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 13:00:25 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/21 19:12:24 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,23 +35,16 @@ class Location
 		Location(const Location &);
 		Location &operator=(const Location &);
 
-		// Excpetions
-		class bad_input : public std::exception
-		{
-			public:
-				const char *what() const throw()
-				{
-					return ("ConfigFileParser: Location Bad input!");
-				}
-		};
-
 	public:
 		// Constructor & Destructor
 		Location();
 		~Location();
 	private:
-		// helpers
+		// private helpers
 		bool is_http_method(const std::string &input) const;
+	public:
+		// public helpers
+		void display_location_informations() const;
 	public:
 		// Setters Public Method
 		void set_location_info(const std::string &info_type, const std::string &info);
@@ -64,6 +57,15 @@ class Location
 		void set_upload_path(const std::string &);
 		void set_cgi_handler(const std::string &);
 		void set_allowed_http_method(const std::string &);
+
+	public:
+		// Getters
+		bool				get_directory_listing() const;
+		const std::string	&get_redirect_path() const;
+		const std::string	&get_root_path() const;
+		const std::string	&get_index_path() const;
+		const std::string	&get_upload_path() const;
+		const std::string	get_cgi_handler(const std::string &extension) const;
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:23 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/20 13:12:07 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/21 20:02:41 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,9 +46,11 @@ class ConfigFileParser
 		~ConfigFileParser();
 	private:
 		// Global Helpers
-		void	buffering_input_file();
+		void	buffering_input_file(); // ! don't store comments
 		int		skip_blank(const char *ptr, int start) const;
 		int		skip_spaces(const char *ptr, int start) const;
+		void	display_extracted_infos() const;
+		void	check_extracted_infos() const;
 
 	private:
 		// ********************* Syntax Checking *********************

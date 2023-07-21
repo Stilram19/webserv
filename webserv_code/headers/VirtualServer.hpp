@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 12:59:50 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/21 18:34:57 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,6 @@
 # define VIRTUAL_SERVER_HPP
 
 # include "GlobalHeader.hpp"
-
-class Location;
 
 class VirtualServer
 {
@@ -25,6 +23,7 @@ class VirtualServer
 	private:
 		// Attributes
 		unsigned int	_max_client_body_size;
+		int				_port_number_int;
 		std::string		_server_name;
 		std::string		_port_number;
 		std::string 	_host_address;
@@ -36,16 +35,6 @@ class VirtualServer
 		VirtualServer(const VirtualServer &);
 		VirtualServer &operator=(const VirtualServer &);
 
-		// Exceptions
-		class bad_input : public std::exception
-		{
-			public:
-				const char *what() const throw()
-				{
-					return ("ConfigFileParser: Server Bad input!");
-				}
-		};
-
 	public:
 		// Constructor & Destructor
 		VirtualServer();
@@ -53,17 +42,16 @@ class VirtualServer
 	public:
 		// Public Helpers
 		Location	*new_location(const std::string &key);
+		void		display_server_informations() const;
 	private:
 		// Private Helpers
-		int					skip_blank(const char *ptr, int start) const;
-		bool				is_unsigned_int(const std::string &str) const;
-		bool				is_error_number(int input) const;
-		int					my_stoi(const std::string &str) const;
-		const std::string	my_trim(const std::string &str) const;
+		bool	is_error_number(int input) const;
+		void	dispaly_pair(std::pair<int, std::string> &error_page) const;
 
 	public:
 		// Setter's Public Methods
 		void set_server_info(const std::string &info_type, const std::string &info, Location *location = NULL);
+
 	private:
 		// Setters
 		void set_max_client_body_size(const std::string &);
@@ -71,8 +59,13 @@ class VirtualServer
 		void set_listen_infos(const std::string &);
 		void set_error_page_path(const std::string &);
 
-		// Location setter
-		void set_location_info(Location *loc, const std::string &key, const std::string &info);
+	public:
+		// Getters
+		unsigned int		get_max_client_body_size() const;
+		int					get_port_number() const;
+		const std::string	&get_server_name() const;
+		const std::string	&get_host_address() const;
+		const std::string	get_error_page(int error_number) const;
 };
 
 #endif

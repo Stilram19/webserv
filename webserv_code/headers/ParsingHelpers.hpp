@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:38:20 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 10:03:34 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/21 19:01:59 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,14 @@ class ParsingHelpers
 		static bool					is_unsigned_int(const std::string &str);
 		static int					my_stoi(const std::string &str);
 		static const std::string	my_trim(const std::string &str);
+
+		template <typename T1, typename T2>
+		static void					display_pair(const std::pair<T1, T2> &pair)
+		{
+			std::cout << pair.first << ", " << pair.second << std::endl;
+		}
+
+		static std::string			skip_leading_zeros(const std::string &info);
 };
 
 #endif

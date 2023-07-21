@@ -12,17 +12,17 @@ server
         directory_listing on
         root ../public/
         #index page2.html
-        upload_path ./uploads
+        upload_post ./uploads
         cgi php     /Users/aben-ham/.1337/projects/web_server/cgi_bin/php-cgi
         cgi .py /usr/local/bin/python3
     }
     location /planet {
         allowed_methods GET
-        auto_index off
+        directory_listing off
         root ../public/planet
-        upload_pass /Users/aben-ham/.1337/projects/web_server/public/uploads
+        upload_post /Users/aben-ham/.1337/projects/web_server/public/uploads
         #index index.html index.php
-        cgi_pass .php ./cgi-bin/php-cgi
+        cgi .php ./cgi-bin/php-cgi
     }
 
     location /planet/image {
@@ -34,7 +34,7 @@ server
     }
 
     location /planet/image/ {
-        allow_methods GET
+        allowed_methods GET
         directory_listing on
         root ../public
         index index.html
