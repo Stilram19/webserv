@@ -1,43 +1,39 @@
 server
 {
-    listen     localhost:3011
+    listen	localhost:3011
     #server_name            host1
-    max_client_body_size 50000000
-    error_page 404 ../public/errors/404.html
-    error_page 400 ../public/errors/400.html
+    max_client_body_size	50000000
+    error_page 404	/Users/obednaou/tests/file
+    error_page 400 /Users/obednaou/tests/test.cpp
     location  /
     {
-        allowed_methods GET POST DELETE
+        allowed_methods	DELETE
         #redirect http://www.google.com
-        directory_listing on
-        root ../public/
+        directory_listing ON
+        root /Users/obednaou
         #index page2.html
-        upload_post ./uploads
-        cgi php     /Users/aben-ham/.1337/projects/web_server/cgi_bin/php-cgi
-        cgi .py /usr/local/bin/python3
+        upload_post /Users/obednaou/tests/file
+        cgi php     /Users/obednaou/tests/file
+        cgi .py /Users/obednaou/tests/test.cpp
     }
-    location /planet {
-        allowed_methods GET
-        directory_listing off
-        root ../public/planet
-        upload_post /Users/aben-ham/.1337/projects/web_server/public/uploads
+	location /planet {
+        allowed_methods GET POST                        
+        directory_listing ON
+        root /Users/obednaou
+        upload_post /Users/obednaou/tests/file
         #index index.html index.php
-        cgi .php ./cgi-bin/php-cgi
+        cgi .php /Users/obednaou/tests/file
     }
 
-    location /planet/image {
-        allowed_methods GET
-        directory_listing on
-        root ../public
+		location	/planet/image {
+        allowed_methods	GET POST DELETE
+        directory_listing OFF
+        root /Users/obednaou/tests
         index index.html
-        cgi .php ./cgi-bin/php-cgi
-    }
+        cgi .php /Users/obednaou/tests/test.cpp
+		cgi .py /Users/obednaou/tests/file	
+		
+	}
 
-    location /planet/image/ {
-        allowed_methods GET
-        directory_listing on
-        root ../public
-        index index.html
-        cgi .php ./cgi-bin/php-cgi
-    }
+
 }

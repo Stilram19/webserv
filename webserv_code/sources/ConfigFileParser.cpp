@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 19:58:42 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/22 10:53:19 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,11 +92,8 @@ void	ConfigFileParser::display_extracted_infos() const
 
 void	ConfigFileParser::check_extracted_infos() const
 {
-	if (_VServers.empty())
-		throw std::runtime_error("No Virtual Server Found!");
 	for (std::vector<VirtualServer *>::const_iterator it = _VServers.begin(); it != _VServers.end(); it++)
 	{
-		std::cout << "HOSTADDRESS: " << (*it)->get_host_address() << std::endl;
 		if ((*it)->get_port_number() == -1)
 			throw std::runtime_error("Listen infos must be provided inside every server block!");
 	}

@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 17:08:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 21:17:52 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/22 10:44:32 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ Location::Location()
 	// default index path
 	// default cgi_handler
 
+	// Default allowed http method
 	_allowed_http_methods.push_back("GET");
 
 	// Setters
@@ -59,6 +60,14 @@ void Location::display_location_informations() const
 	std::cout << "(*) Root Path: " << get_root_path() << std::endl;
 	std::cout << "(*) index path: " << get_index_path() << std::endl;
 	std::cout << "(*) upload path: " << get_upload_path() << std::endl;
+	std::cout << "(*) allowed methods: ";
+	for (std::vector<std::string>::const_iterator it = _allowed_http_methods.begin(); it != _allowed_http_methods.end(); it++)
+	{
+		std::cout << (*it);
+		if (it + 1 != _allowed_http_methods.end())
+			std::cout << ", ";
+	}
+	std::cout << std::endl;
 	std::cout << "(*) cgi handlers: " << std::endl << std::endl;
 	std::for_each(_cgi_handler.begin(), _cgi_handler.end(), ParsingHelpers::display_pair<std::string, std::string>);
 }
@@ -138,6 +147,10 @@ void Location::set_cgi_handler(const std::string &input)
 	_cgi_handler[extension] = cgi_interpret;
 }
 
+// POST DELETE
+
+
+
 void Location::set_allowed_http_method(const std::string &input)
 {
 	int start = 0, end = 0;
@@ -145,18 +158,18 @@ void Location::set_allowed_http_method(const std::string &input)
 	// clearing the default methods (pushed while constructing)
 	_allowed_http_methods.clear();
 
-	while (input[start])
+	while (input[end])
 	{
-		while (!isblank(input[end]))
+		while (input[end] && !isblank(input[end]))
 			end++;
-		if (!input[start])
-			return ;
 		const std::string method = input.substr(start, end - start);
 
 		if (!is_http_method(method))
 			throw std::runtime_error("Unkown http method! The Only supported methods are (GET, POST, DELETE)!");
 		_allowed_http_methods.push_back(method);
-		start = ParsingHelpers::skip_spaces(input.c_str(), end);
+
+		end = ParsingHelpers::skip_spaces(input.c_str(), end);
+		start = end;
 	}
 }
 

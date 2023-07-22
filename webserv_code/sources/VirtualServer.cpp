@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 19:52:53 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/22 10:06:40 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,7 @@ void	VirtualServer::display_server_informations() const
 	std::cout << "(*) Max_client_body_size: " << get_max_client_body_size() << std::endl;
 	std::cout << "(*) Hostname: " << get_host_address() << std::endl;
 	std::cout << "(*) Port Number: " << get_port_number() << std::endl;
+	std::cout << "(*) Server Name: " << get_server_name() << std::endl;
 	std::cout << "(*) error pages: " << std::endl << std::endl;
 	std::for_each(_error_pages.begin(), _error_pages.end(), ParsingHelpers::display_pair<int, std::string>);
 
