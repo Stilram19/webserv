@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/22 10:06:40 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/23 16:48:40 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -184,6 +184,11 @@ const std::string &VirtualServer::get_server_name() const
 int	VirtualServer::get_port_number() const
 {
 	return (_port_number_int);
+}
+
+const std::string	&VirtualServer::get_port_number_str() const
+{
+	return (_port_number);
 }
 
 const std::string &VirtualServer::get_host_address() const

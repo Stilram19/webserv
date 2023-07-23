@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/22 10:53:19 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/23 15:29:26 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,17 @@ void	ConfigFileParser::check_extracted_infos() const
 	{
 		if ((*it)->get_port_number() == -1)
 			throw std::runtime_error("Listen infos must be provided inside every server block!");
+	}
+
+	for (std::vector<VirtualServer *>::const_iterator it = _VServers.begin(); it != _VServers.end(); it++)
+	{
+		for (std::vector<VirtualServer *>::const_iterator it1 = it + 1; it1 != _VServers.end(); it1++)
+		{
+			if ((*it)->get_port_number() == (*it1)->get_port_number()
+				&& (*it)->get_server_name() == (*it1)->get_server_name()
+				&& (*it)->get_host_address() == (*it1)->get_host_address())
+					throw std::runtime_error("Two servers have the same name, port and address!");
+		}
 	}
 }
 
@@ -399,6 +410,15 @@ int	ConfigFileParser::extract_location_token_value(VirtualServer *vs, Location *
 		return (end);
 	return (index);
 }
+
+
+// *******************      GETTERS       *******************
+
+const std::vector<VirtualServer *> &ConfigFileParser::get_parsing_result() const
+{
+	return (_VServers);
+}
+
 
 // ******************* PARSER MAIN METHOD *******************
 

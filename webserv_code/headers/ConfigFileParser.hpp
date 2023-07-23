@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:23 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 20:02:41 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/23 15:29:14 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,6 +91,10 @@ class ConfigFileParser
 		int		extract_location_infos(VirtualServer *vs, int index);
 		int		extract_location_token_values(VirtualServer *vs, Location *loc, int index);
 		int		extract_location_token_value(VirtualServer *vs, Location *loc, const char *ptr, int index);
+
+	public:
+		// Getters
+		const std::vector<VirtualServer *> &get_parsing_result() const;
 
 	public:
 		// ConfigFileParser Main Method

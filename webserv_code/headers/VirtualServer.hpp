@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 21:02:18 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/23 16:48:03 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,7 @@ class VirtualServer
 		// Getters
 		unsigned int		get_max_client_body_size() const;
 		int					get_port_number() const;
+		const std::string	&get_port_number_str() const;
 		const std::string	&get_server_name() const;
 		const std::string	&get_host_address() const;
 		const std::string	get_error_page(int error_number) const;
