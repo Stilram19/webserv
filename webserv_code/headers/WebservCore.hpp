@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/22 17:31:58 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/23 18:28:26 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/23 19:36:04 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,8 @@ class WebservCore
 	private:
 		// (*) Attributes
 
-		// the collection of sockets used for establishing connections with clients
-		std::map<int, std::vector<VirtualServer *> >	_connection_sockets;
+		// Pairing each connection socket with the virtual servers that listen using it.
+		std::map<int, std::vector<VirtualServer *> >	_listens;
 
 		// Socket Descriptor Sets for read and write (parameters of select)
 		fd_set read_sockets, write_sockets;

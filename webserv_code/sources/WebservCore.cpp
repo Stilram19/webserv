@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/23 18:50:43 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/23 19:45:54 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 
 WebservCore::WebservCore(const std::vector<VirtualServer *> &VServers)
 {
+	// (*) Constructing the 
+	// collecting communication endpoints
 	std::vector<std::pair<std::string, std::string> > endpoints;
 
 	for (std::vector<VirtualServer *>::const_iterator it = VServers.begin(); it != VServers.end(); it++)
@@ -24,17 +26,31 @@ WebservCore::WebservCore(const std::vector<VirtualServer *> &VServers)
 
 		endpoint.first = (*it)->get_host_address();
 		endpoint.second = (*it)->get_port_number_str();
-		if (is_new_endpoint(VServers.begin(), it, endpoint))
+		if (std::find(endpoints.begin(), endpoints.end(), endpoint) == endpoints.end())
 			endpoints.push_back(endpoint);
 	}
-	// Constructing connexion sockets, that will be used to establish connexions with clients
 
+	// Constructing the _listens map
+	for (std::vector<std::pair<std::string, std::string> >::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
+	{
+		int									connection_socket;
+		std::vector<VirtualServer *>		v_servers;
+
+		connection_socket = create_socket(it->first, it->second);
+		for (std::vector<VirtualServer *>::const_iterator it1 = VServers.begin(); it1 != VServers.end(); it1++)
+		{
+			if ((*it1)->get_host_address() == it->first
+				&& (*it1)->get_port_number_str() == it->second)
+				v_servers.push_back((*it1));
+		}
+		_listens[connection_socket] = v_servers;
+	}
 
 	// Constructing the socket descriptors sets
-	// FD_ZERO(&read_sockets);
-	// FD_ZERO(&write_sockets);
-	// for (std::vector<int>::const_iterator it = _connection_sockets.begin(); it != _connection_sockets.end(); it++)
-	// 	FD_SET((*it), &read_sockets);
+	FD_ZERO(&read_sockets);
+	FD_ZERO(&write_sockets);
+	for (std::map<int, std::vector<VirtualServer *> >::const_iterator it = _listens.begin(); it != _listens.end(); it++)
+		FD_SET(it->first, &read_sockets);
 }
 
 WebservCore::~WebservCore() {}
@@ -67,6 +83,7 @@ int	create_socket(const std::string &hostname, const std::string &port_number)
 	}
 
 	// Giving the socket a name
+	// ! Don't forget to use the setsockopt function
 	if (bind(connection_socket, res->ai_addr, res->ai_addrlen))
 	{
 		std::cout << "Failed to name a socket!" << std::endl;
@@ -74,7 +91,12 @@ int	create_socket(const std::string &hostname, const std::string &port_number)
 	}
 
 	// Listening
-	if (listen(connection_socket, ))
+	if (listen(connection_socket, 10000))
+	{
+		std::cout << "Failed to listen!" << std::endl;
+		exit(1);
+	}
+	return (connection_socket);
 }
 
 // *********************** WebservCore's Main Function ***********************
