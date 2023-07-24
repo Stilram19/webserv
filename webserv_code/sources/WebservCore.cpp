@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/24 14:21:09 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/24 19:51:16 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,7 @@ int	create_socket(const std::string &hostname, const std::string &port_number)
 
 	if (connection_socket == -1)
 	{
-		std::cout << "Failed to create a socket!" << std::endl;
+		std::cerr << "Failed to create a socket!" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -90,14 +90,14 @@ int	create_socket(const std::string &hostname, const std::string &port_number)
 	// Giving the socket a name
 	if (bind(connection_socket, res->ai_addr, res->ai_addrlen))
 	{
-		std::cout << "Failed to name a socket!" << std::endl;
+		std::cerr << "Failed to name a socket!" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	// Listening
 	if (listen(connection_socket, 10000))
 	{
-		std::cout << "Failed to listen!" << std::endl;
+		std::cerr << "Failed to listen!" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	return (connection_socket);
@@ -115,7 +115,36 @@ Client		*WebservCore::new_client(int client_socket, int listen_socket)
 
 void	WebservCore::launch_server()
 {
-	// Select file descriptors that are ready for I/O operations
+
+	// Using copies of the read and write sockets in order to keep data (select overwrites the content of fd sets)
+	fd_set	read_sockets, write_sockets;
+
+	while (1)
+	{
+		int		nfds = get_current_nfds();
+
+		// Using copies of the read and write sockets in order to keep data (select overwrites the content of fd sets)
+		memcpy(&read_sockets, &_read_sockets, sizeof(fd_set));
+		memcpy(&write_sockets, &_write_sockets, sizeof(fd_set));
+
+		// (*) Select file descriptors that are ready for I/O operations
+		if (select(nfds, &read_sockets, &write_sockets, NULL, NULL))
+		{
+			std::cerr << "Select failed!" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+
+		// (*) Check and Accept new Connection requests
+		for (std::map<int, std::vector<VirtualServer *> >::const_iterator it = _listens.begin(); it != _listens.end(); it++)
+		{
+			int listen_socket = it->first;
+
+			if (!FD_ISSET(it->first, &read_sockets))
+				continue ;
+			int client_socket = accept();
+		}
+
+	}
 
 	// iterate through the _listens map checking if a listen endpoint has received a connection, if so accept it and create
 	// a client object that will handle the connection later on.
