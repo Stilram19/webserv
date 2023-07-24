@@ -1,40 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   GlobalHeader.hpp                                   :+:      :+:    :+:   */
+/*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/16 16:06:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/24 14:12:07 by obednaou         ###   ########.fr       */
+/*   Created: 2023/07/24 13:47:32 by obednaou          #+#    #+#             */
+/*   Updated: 2023/07/24 14:05:02 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef GLOBAL_HEADER_HPP
-# define GLOBAL_HEADER_HPP
-
-class WebservCore;
-
-class Client;
-
-class ConfigFileParser;
-
-class VirtualServer;
-
-class Location;
-
-# include "include.hpp"
-
-# include "ParsingHelpers.hpp"
-
-# include "ConfigFileParser.hpp"
-
-# include "VirtualServer.hpp"
-
-# include "Location.hpp"
-
 # include "Client.hpp"
 
-# include "WebservCore.hpp"
+// ************* Constructor & Destructor *************
 
-# endif
+Client::Client(int client_socket, int listen_socket) : _client_socket(client_socket), _listen_socket(listen_socket), _VServer(NULL) {}
+
+Client::~Client() {}
+
+// Public Functions
+
+bool is_config_set() const
+{
+	return ((_VServer) ? true : false);
+}

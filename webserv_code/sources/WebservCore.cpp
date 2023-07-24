@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/23 19:45:54 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/24 14:21:09 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,29 +79,47 @@ int	create_socket(const std::string &hostname, const std::string &port_number)
 	if (connection_socket == -1)
 	{
 		std::cout << "Failed to create a socket!" << std::endl;
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
+	// Setting the SO_REUSEADDR and SO_NOSIGPIPE flags at the SOL_SOCKET level.
+	int set_option_on = 1;
+	setsockopt(connection_socket,  SOL_SOCKET,  SO_REUSEADDR , &set_option_on, sizeof(set_option_on));
+    setsockopt(connection_socket,  SOL_SOCKET,  SO_NOSIGPIPE, &set_option_on, sizeof(set_option_on));
+
 	// Giving the socket a name
-	// ! Don't forget to use the setsockopt function
 	if (bind(connection_socket, res->ai_addr, res->ai_addrlen))
 	{
 		std::cout << "Failed to name a socket!" << std::endl;
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	// Listening
 	if (listen(connection_socket, 10000))
 	{
 		std::cout << "Failed to listen!" << std::endl;
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	return (connection_socket);
 }
 
+Client		*WebservCore::new_client(int client_socket, int listen_socket)
+{
+	Client *new_c = new Client(client_socket, listen_socket);
+
+	_clients.push_back(new_c);
+	return (new_c);
+}
+
 // *********************** WebservCore's Main Function ***********************
 
-WebservCore::launch_server()
+void	WebservCore::launch_server()
 {
-	
+	// Select file descriptors that are ready for I/O operations
+
+	// iterate through the _listens map checking if a listen endpoint has received a connection, if so accept it and create
+	// a client object that will handle the connection later on.
+
+	// iterate through the _clients vector ,checking if a client has sent a packet ,if yes ,handle read, otherwise check if 
+	// 
 }

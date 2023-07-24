@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/22 17:31:58 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/23 19:36:04 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/24 14:14:19 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 
 // To add in ConfigFileParsing: check if there is more than one server with the same server_name and listen informations
 /* 
-fcntl(fd, F_SETFL, O_NONBLOCK); should be called for every socket descriptor.
+fcntl(fd, F_SETFL, O_NONBLOCK); should be called for every client socket descriptor.
 For each listen endpoint a listen socket for connexions must be created
 Using select we select the socket descriptors that are ready to read from.
 If a connexion socket is selected this means that a connexion request is sent, then it should be accepted using accept.
@@ -32,13 +32,17 @@ class WebservCore
 		// Pairing each connection socket with the virtual servers that listen using it.
 		std::map<int, std::vector<VirtualServer *> >	_listens;
 
-		// Socket Descriptor Sets for read and write (parameters of select)
+		// Clients
+		std::vector<Client *> _clients;
+
+		// Socket Descriptor Sets for read and write (used in polling using select)
 		fd_set read_sockets, write_sockets;
 
 		// (*) Useless Constructors & Copy Assignment
 		WebservCore();
 		WebservCore(const WebservCore &);
 		WebservCore &operator=(const WebservCore &);
+
 	public:
 		// (*) Constructor & Destructor
 		WebservCore(const std::vector<VirtualServer *> &VServers);
@@ -47,10 +51,10 @@ class WebservCore
 	private:
 		// Helpers
 		static int	create_socket(const std::string &hostname, const std::string &port_number);
-
+		Client		*new_client(int client_socket, int listen_socket);
 	public:
 		// (*) WebservCore's Main Function
-		launch_server();
+		void	launch_server();
 };
 
 #endif
