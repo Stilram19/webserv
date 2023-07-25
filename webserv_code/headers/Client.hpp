@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:40:31 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/24 18:43:02 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/25 11:43:47 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@ class Client
 	private:
 		// (*) Attributes
 
+		// this flag answers the question: "is the Client Done sending the request and is ready to receive the response?"
+		bool _is_request_done;
+
 		// socket to read from and write to the client
 		int _client_socket;
 
@@ -27,7 +30,7 @@ class Client
 		int _listen_socket;
 
 		// Clients Configuration
-		VirtualServer *VServer;
+		VirtualServer *_VServer;
 
 		// (*) Useless Constructors & Copy Assignment
 		Client();
@@ -42,6 +45,10 @@ class Client
 		// this function answers the question: "Does the client already knows its virtual server?"
 		bool is_config_set() const;
 
+	public:
+		// getters
+		int		get_client_socket() const;
+		bool	is_request_done();
 }
 
 #endif

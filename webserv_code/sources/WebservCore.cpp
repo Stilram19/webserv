@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/24 19:51:16 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/25 11:40:41 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,12 +138,41 @@ void	WebservCore::launch_server()
 		for (std::map<int, std::vector<VirtualServer *> >::const_iterator it = _listens.begin(); it != _listens.end(); it++)
 		{
 			int listen_socket = it->first;
+			socklen_t	addr_len;
+			struct sockaddr client_addr;
 
-			if (!FD_ISSET(it->first, &read_sockets))
+			if (!FD_ISSET(listen_socket, &read_sockets))
 				continue ;
-			int client_socket = accept();
+			int client_socket = accept(listen_socket, &client_addr, &addr_len);
+
+			if (client_socket)
+			{
+				std::cerr << "Failed to accept client's connection request!" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+
+			Client *new_c = new_client(client_socket, listen_socket);
 		}
 
+		// (*) Read Client's sent packets, and Answer Clients that are waiting for the Response.
+		for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); it++)
+		{
+			int client_socket = (*it)->get_client_socket();
+
+			// (*) Read Client's sent packets, if any.
+			if (FD_ISSET(client_socket, &read_sockets))
+			{
+				//!todo handle request reading
+				//!todo assign config to client
+				continue ;
+			}
+
+			// (*) Respond to Client, if ready.
+			if (!FD_ISSET(client_socket, &write_sockets))
+				continue ;
+
+			if ((*it)->is_request_done())
+		}
 	}
 
 	// iterate through the _listens map checking if a listen endpoint has received a connection, if so accept it and create
