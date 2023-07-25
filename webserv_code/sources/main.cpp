@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/18 08:41:50 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/23 15:41:28 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/25 19:43:42 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,17 +16,24 @@ int	main(int argc, char **argv)
 {
 	// ConfigFileParsing
 
-	if (argc != 2)
+	try
 	{
-		std::cout << "Invlalid number of arguments!" << std::endl;
-		return (1);
+		// Config File Parsing
+		if (argc != 2)
+			throw std::runtime_error("Invalid number of arguments!");
+
+		ConfigFileParser parser(*(argv + 1));
+
+		parser.config_file_parsing();
+
+		// Launching the Server
+		WebservCore webserv(parser.get_parsing_result());
 	}
-	ConfigFileParser parser(*(argv + 1));
 
-	parser.config_file_parsing();
-
-	// Launching the Server
-
-	WebservCore webserv(parser.get_parsing_result());
-	return (0);
+	catch (std::exception &e)
+	{
+		std::cerr << e.what() << std::endl;
+		return (EXIT_FAILURE);
+	}
+	return (EXIT_SUCCESS);
 }

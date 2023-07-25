@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/23 15:29:26 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/25 19:55:43 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -384,7 +384,6 @@ int	ConfigFileParser::extract_location_token_values(VirtualServer *vs, Location 
 		index = ParsingHelpers::skip_spaces(_buffer.c_str(), index);
 		if (_buffer[index] == '}')
 			break ;
-		//std::cout << "alkdsjhfalkdsjhfaldksjfhaldsjf: " <<_buffer.c_str() + index << std::endl;
 		index = extract_location_token_value(vs, loc, _buffer.c_str(), index);
 	}
 	return (index);
@@ -424,18 +423,10 @@ const std::vector<VirtualServer *> &ConfigFileParser::get_parsing_result() const
 
 void	ConfigFileParser::config_file_parsing()
 {
-	try
-	{
-		buffering_input_file();
-		syntax_checker();
-		std::cout << "*********** VALID SYNTAX! **********" << std::endl;
-		extracting_config_infos();
-		display_extracted_infos();// debugging
-		check_extracted_infos();
-	}
-	catch (const std::exception &e)
-	{
-		std::cout << e.what() << std::endl;
-		exit(1);
-	}
+	buffering_input_file();
+	syntax_checker();
+	std::cout << "*********** VALID SYNTAX! **********" << std::endl; // debugging
+	extracting_config_infos();
+	display_extracted_infos(); // debugging
+	check_extracted_infos();
 }

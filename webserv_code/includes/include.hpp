@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 18:21:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 11:42:41 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/25 19:54:01 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <netdb.h>
 # include <sys/types.h>
 # include <sys/socket.h>
+# include <sys/select.h>
 # include <fcntl.h>
 # include <unistd.h>
 

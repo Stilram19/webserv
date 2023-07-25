@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:40:31 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/25 11:43:47 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/25 19:49:37 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,9 +46,14 @@ class Client
 		bool is_config_set() const;
 
 	public:
-		// getters
+		// Getters
 		int		get_client_socket() const;
 		bool	is_request_done();
+
+	public:
+		// Setters
+		void	set_request_as_finished();
+
 }
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:47:32 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/25 11:43:50 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/25 20:02:22 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,13 @@
 
 Client::Client(int client_socket, int listen_socket) : _is_request_done(false), _client_socket(client_socket), _listen_socket(listen_socket), _VServer(NULL) {}
 
-Client::~Client() {}
+Client::~Client()
+{
+	// cutting the connection with the client
+	close(client_socket);
+
+
+}
 
 // Public Functions
 
@@ -38,4 +44,11 @@ bool Client::is_request_done()
 
 	_is_request_done = false;
 	return (ret);
+}
+
+// ******************* SETTERS *******************
+
+void	Client::set_request_as_finished()
+{
+	_is_request_done = true;
 }
