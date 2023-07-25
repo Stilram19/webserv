@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/25 11:40:41 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/25 17:09:52 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,9 +55,9 @@ WebservCore::WebservCore(const std::vector<VirtualServer *> &VServers)
 
 WebservCore::~WebservCore() {}
 
+
 // ***********************            HELPERS          ***********************
 
-// Constructor Helpers
 
 int	create_socket(const std::string &hostname, const std::string &port_number)
 {
@@ -111,73 +111,112 @@ Client		*WebservCore::new_client(int client_socket, int listen_socket)
 	return (new_c);
 }
 
+void	WebservCore::accept_new_connection_requests(fd_set *read_sockets)
+{
+	for (std::map<int, std::vector<VirtualServer *> >::const_iterator it = _listens.begin(); it != _listens.end(); it++)
+	{
+		socklen_t	addr_len;
+		int			listen_socket = it->first;
+		struct sockaddr client_addr;
+
+		// !Check if the server is busy
+		if (!FD_ISSET(listen_socket, read_sockets))
+			continue ;
+
+		// Send SYN-ACK to client.
+		int client_socket = accept(listen_socket, &client_addr, &addr_len);
+
+		if (client_socket)
+			throw std::runtime_error("Failed to accept client's connection request!");
+
+		// create new client handler
+		new_client(client_socket, listen_socket);
+	}
+}
+
+void	WebservCore::serve_connected_clients(fd_set *read_sockets, fd_set *write_sockets)
+{
+	int			client_socket;
+
+	for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); it++)
+	{
+		client_socket = (*it)->get_client_socket();
+
+		// (*) Read Client's sent packets, if any.
+		if (FD_ISSET(client_socket, read_sockets))
+		{
+			//!todo handle request reading
+			//!todo assign config to client
+			continue ;
+		}
+
+		// (*) Respond to Client, if ready.
+		if (!FD_ISSET(client_socket, write_sockets))
+			continue ;
+
+		if ((*it)->is_request_done())
+		{
+			//! respond
+		}
+		//! delete_client();
+	}
+}
+
+int	WebservCore::get_current_nfds() const
+{
+	int max_fd = -1;
+
+	for (std::map<int, std::vector<VirtualServer *> >::const_iterator it = _listens.begin(); it != _listens.end(); it++)
+	{
+		int listen_socket = it->first;
+
+		if (listen_socket > max_fd)
+			max_fd = listen_socket;
+	}
+
+	for (std::vector<Client *>::const_iterator it = _clients.begin(); it != _clients.end(); it++)
+	{
+		int client_socket = (*it)->get_client_socket();
+
+		if (client_socket > max_fd)
+			max_fd = client_socket;
+	}
+	return (max_fd + 1);
+}
+
 // *********************** WebservCore's Main Function ***********************
 
 void	WebservCore::launch_server()
 {
-
-	// Using copies of the read and write sockets in order to keep data (select overwrites the content of fd sets)
+	int		nfds;
 	fd_set	read_sockets, write_sockets;
 
 	while (1)
 	{
-		int		nfds = get_current_nfds();
-
-		// Using copies of the read and write sockets in order to keep data (select overwrites the content of fd sets)
-		memcpy(&read_sockets, &_read_sockets, sizeof(fd_set));
-		memcpy(&write_sockets, &_write_sockets, sizeof(fd_set));
-
-		// (*) Select file descriptors that are ready for I/O operations
-		if (select(nfds, &read_sockets, &write_sockets, NULL, NULL))
+		try
 		{
-			std::cerr << "Select failed!" << std::endl;
+			// the successor of the max of all fds to be selected
+			nfds = get_current_nfds();
+
+			// Using copies of the read and write sockets in order to keep data (select overwrites the content of fd sets)
+			FD_COPY(&read_sockets, &_read_sockets);
+			FD_COPY(&write_sockets, &_write_sockets);
+
+			// (*) Select file descriptors that are ready for I/O operations
+			if (select(nfds, &read_sockets, &write_sockets, NULL, NULL))
+				throw std::runtime_error("Select failed!");
+
+			// (*) Check and Accept new Connection requests (the SYN-ACK of the server in the three-way handshake)
+			accept_new_connection_requests(&read_sockets);
+
+			// (*) Read Client's sent packets, and Answer Clients that are waiting for the Response.
+			serve_connected_clients(&read_sockets, &write_sockets);
+		}
+
+		catch (std::exception &e)
+		{
+			std::cerr << e.what() << std::endl;
 			exit(EXIT_FAILURE);
 		}
-
-		// (*) Check and Accept new Connection requests
-		for (std::map<int, std::vector<VirtualServer *> >::const_iterator it = _listens.begin(); it != _listens.end(); it++)
-		{
-			int listen_socket = it->first;
-			socklen_t	addr_len;
-			struct sockaddr client_addr;
-
-			if (!FD_ISSET(listen_socket, &read_sockets))
-				continue ;
-			int client_socket = accept(listen_socket, &client_addr, &addr_len);
-
-			if (client_socket)
-			{
-				std::cerr << "Failed to accept client's connection request!" << std::endl;
-				exit(EXIT_FAILURE);
-			}
-
-			Client *new_c = new_client(client_socket, listen_socket);
-		}
-
-		// (*) Read Client's sent packets, and Answer Clients that are waiting for the Response.
-		for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); it++)
-		{
-			int client_socket = (*it)->get_client_socket();
-
-			// (*) Read Client's sent packets, if any.
-			if (FD_ISSET(client_socket, &read_sockets))
-			{
-				//!todo handle request reading
-				//!todo assign config to client
-				continue ;
-			}
-
-			// (*) Respond to Client, if ready.
-			if (!FD_ISSET(client_socket, &write_sockets))
-				continue ;
-
-			if ((*it)->is_request_done())
-		}
 	}
-
-	// iterate through the _listens map checking if a listen endpoint has received a connection, if so accept it and create
-	// a client object that will handle the connection later on.
-
-	// iterate through the _clients vector ,checking if a client has sent a packet ,if yes ,handle read, otherwise check if 
-	// 
 }
