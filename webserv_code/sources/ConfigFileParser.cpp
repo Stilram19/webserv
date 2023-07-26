@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/25 19:55:43 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/26 14:48:56 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -429,4 +429,5 @@ void	ConfigFileParser::config_file_parsing()
 	extracting_config_infos();
 	display_extracted_infos(); // debugging
 	check_extracted_infos();
+	std::cout << "*********** PARSING DONE ************" << std::endl; // debuggin
 }

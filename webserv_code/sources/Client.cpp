@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:47:32 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/26 12:28:36 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/26 13:53:44 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 // ************* Constructor & Destructor *************
 
-Client::Client(int client_socket, int listen_socket) : _is_request_done(false), _client_socket(client_socket), _listen_socket(listen_socket), _VServer(NULL) {}
+Client::Client(int client_socket, int listen_socket) : _client_socket(client_socket), _listen_socket(listen_socket), _VServer(NULL) {}
 
 Client::~Client()
 {
@@ -34,19 +34,4 @@ bool Client::is_config_set() const
 int Client::get_client_socket() const
 {
 	return (_client_socket);
-}
-
-bool Client::is_request_done()
-{
-	bool ret = _is_request_done;
-
-	_is_request_done = false;
-	return (ret);
-}
-
-// ******************* SETTERS *******************
-
-void	Client::set_request_as_finished()
-{
-	_is_request_done = true;
 }

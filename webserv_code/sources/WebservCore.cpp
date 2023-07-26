@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/26 12:27:36 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/26 18:05:29 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 
 WebservCore::WebservCore(const std::vector<VirtualServer *> &VServers)
 {
-	// (*) Constructing the 
 	// collecting communication endpoints
 	std::vector<std::pair<std::string, std::string> > endpoints;
 
@@ -29,27 +28,23 @@ WebservCore::WebservCore(const std::vector<VirtualServer *> &VServers)
 		if (std::find(endpoints.begin(), endpoints.end(), endpoint) == endpoints.end())
 			endpoints.push_back(endpoint);
 	}
-
 	// Constructing the _listens map
 	for (std::vector<std::pair<std::string, std::string> >::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
 	{
-		int									connection_socket;
+		int									listen_socket;
 		std::vector<VirtualServer *>		v_servers;
 
-		connection_socket = create_socket(it->first, it->second);
+		listen_socket = create_socket(it->first, it->second);
 		for (std::vector<VirtualServer *>::const_iterator it1 = VServers.begin(); it1 != VServers.end(); it1++)
 		{
 			if ((*it1)->get_host_address() == it->first
 				&& (*it1)->get_port_number_str() == it->second)
-				v_servers.push_back((*it1));
+				v_servers.push_back(*it1);
 		}
-		_listens[connection_socket] = v_servers;
+		_listens[listen_socket] = v_servers;
 	}
 
 	// (*) Constructing the socket descriptors sets
-
-	// setting the max number of socket descriptors that can be represented by fd_set in the system
-	_fds_count = FD_SETSIZE;
 
 	// nullifying the fd sets
 	FD_ZERO(&_read_sockets);
@@ -57,10 +52,7 @@ WebservCore::WebservCore(const std::vector<VirtualServer *> &VServers)
 
 	// setting the listen sockets into the read sockets set
 	for (std::map<int, std::vector<VirtualServer *> >::const_iterator it = _listens.begin(); it != _listens.end(); it++)
-	{
-		_fds_count--;
 		FD_SET(it->first, &_read_sockets);
-	}
 }
 
 WebservCore::~WebservCore() {}
@@ -68,8 +60,7 @@ WebservCore::~WebservCore() {}
 
 // *********************** HELPERS ***********************
 
-
-int	create_socket(const std::string &hostname, const std::string &port_number)
+int	WebservCore::create_socket(const std::string &hostname, const std::string &port_number)
 {
 	int				connection_socket;
 	struct addrinfo	hints;
@@ -97,6 +88,7 @@ int	create_socket(const std::string &hostname, const std::string &port_number)
 	// Giving the socket a name
 	if (bind(connection_socket, res->ai_addr, res->ai_addrlen))
 		throw std::runtime_error("Failed to name a socket!");
+	freeaddrinfo(res);
 
 	// Listening
 	if (listen(connection_socket, 10000))
@@ -113,15 +105,12 @@ Client		*WebservCore::new_client(int client_socket, int listen_socket)
 	return (new_c);
 }
 
-void		WebservCore::drop_client(std::vector<Client *>::iterator it)
+void	WebservCore::drop_client(std::vector<Client *>::iterator &it)
 {
 	Client *client = (*it);
 	int client_socket = client->get_client_socket();
 
 	// clearing the bit that represents the client_socket in both read and write fd_sets
-
-	_fds_count++;
-
 	FD_CLR(client_socket, &_read_sockets);
 	FD_CLR(client_socket, &_write_sockets);
 
@@ -130,7 +119,7 @@ void		WebservCore::drop_client(std::vector<Client *>::iterator it)
 
 	// destroying the client object ==> releasing the heap memory reserved to it ==> removing the useless pointer from the _client vector
 	delete client;
-	_clients.erase(it);
+	it = _clients.erase(it) - 1;
 }
 
 void	WebservCore::accept_new_connection_requests()
@@ -141,10 +130,6 @@ void	WebservCore::accept_new_connection_requests()
 		int			listen_socket = it->first;
 		struct sockaddr client_addr;
 
-		// Checking if the server is busy
-		if (is_server_busy())
-			return ;
-
 		// Checking if a SYN was sent to this listen socket
 		if (!FD_ISSET(listen_socket, &select_read_sockets))
 			continue ;
@@ -152,11 +137,16 @@ void	WebservCore::accept_new_connection_requests()
 		// Send SYN-ACK to client.
 		int client_socket = accept(listen_socket, &client_addr, &addr_len);
 
-		if (client_socket)
-			throw std::runtime_error("Failed to accept client's connection request!");
+		std::cout << "ACCEPTED!" << std::endl;
+		if (client_socket == -1)
+			return ;
 
 		// Setting the new_client's socket in read_sockets, to be selected for read.
-		_fds_count--;
+		if (client_socket >= FD_SETSIZE)
+		{
+			close(client_socket);
+			return ;
+		}
 		FD_SET(client_socket, &_read_sockets);
 
 		// create new client handler
@@ -168,6 +158,7 @@ void	WebservCore::serve_connected_clients()
 {
 	int			client_socket;
 
+	std::cout << "CLIENTS: " << _clients.size() << std::endl;
 	for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); it++)
 	{
 		client_socket = (*it)->get_client_socket();
@@ -177,18 +168,34 @@ void	WebservCore::serve_connected_clients()
 		{
 			//!todo handle request reading
 			//!todo assign config to client
-			continue ;
-		}
+			std::cout << "(*) Received Packet: ";
+			char buffer[11];
+			int	read_bytes = read(client_socket, buffer, 10);
 
+			if (read_bytes == -1)
+			{
+				std::cout << "Client Droped!" << std::endl;
+				drop_client(it);
+				continue ;
+			}
+			buffer[read_bytes] = '\0';
+			if (!strncmp(buffer, "\r\n", 2))
+			{
+				std::cout << "REQUEST READING DONE!" << std::endl;
+				FD_CLR(client_socket, &_read_sockets);
+				FD_SET(client_socket, &_write_sockets);
+				continue ;
+			}
+			std::cout << buffer << std::endl;
+		}
 		// (*) Respond to Client, if ready.
 		if (!FD_ISSET(client_socket, &select_write_sockets))
 			continue ;
 
-		if ((*it)->is_request_done())
-		{
-			// respond
-		}
-		// delete_client();
+		// respond
+		std::cout << "I'm busy! Can't respond now!" << std::endl;
+		drop_client(it);
+		// drop_client();
 	}
 }
 
@@ -214,17 +221,13 @@ int	WebservCore::get_current_nfds() const
 	return (max_fd + 1);
 }
 
-bool		WebservCore::is_server_busy() const
-{
-	return (!_fds_count);
-}
-
 // *********************** WebservCore's Main Function ***********************
 
 void	WebservCore::launch_server()
 {
 	int		nfds;
 
+	std::cout << "Launching the server..." << std::endl; // debugging
 	while (1)
 	{
 		// the successor of the max of all fds to be selected
@@ -234,13 +237,19 @@ void	WebservCore::launch_server()
 		FD_COPY(&_read_sockets, &select_read_sockets);
 		FD_COPY(&_write_sockets, &select_write_sockets);
 
+		//!debugging
+		std::cout << "Selecting..." << std::endl;
 		// (*) Select file descriptors that are ready for I/O operations
-		if (select(nfds, &select_read_sockets, &select_write_sockets, NULL, NULL))
+		if (select(nfds, &select_read_sockets, &select_write_sockets, NULL, NULL) == -1)
 			throw std::runtime_error("Select failed!");
 
+		//!debugging
+		std::cout << "Accepting new connection requests..." << std::endl;
 		// (*) Check and Accept new Connection requests (the SYN-ACK of the server in the three-way handshake)
 		accept_new_connection_requests();
 
+		//!debugging
+		std::cout << "Serving Connected Clients..." << std::endl;
 		// (*) Read Client's sent packets, and Answer Clients that are waiting for Response.
 		serve_connected_clients();
 	}

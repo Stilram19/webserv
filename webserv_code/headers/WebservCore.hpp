@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/22 17:31:58 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/26 12:18:16 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/26 17:58:13 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,6 @@ class WebservCore
 		std::vector<Client *> _clients;
 
 		// Socket Descriptor Sets for read and write (used in select)
-		int		_fds_count;
 		fd_set	_read_sockets, _write_sockets;
 
 		// fd_sets copies used as temporaries in select
@@ -50,12 +49,10 @@ class WebservCore
 		// Helpers
 		static int	create_socket(const std::string &hostname, const std::string &port_number);
 		Client		*new_client(int client_socket, int listen_socket);
-		void		drop_client(std::vector<Client *>::iterator it);
+		void		drop_client(std::vector<Client *>::iterator &it);
 		void		accept_new_connection_requests();
 		void		serve_connected_clients();
 		int			get_current_nfds() const;
-		bool		is_server_busy() const;
-
 	public:
 		// (*) WebservCore's Main Function
 		void	launch_server();
