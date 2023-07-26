@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/22 17:31:58 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/25 20:20:53 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/26 12:18:16 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 # include "GlobalHeader.hpp"
 
 // To add in ConfigFileParsing: check if there is more than one server with the same server_name and listen informations
-// ! fcntl(fd, F_SETFL, O_NONBLOCK); should be called for every client socket descriptor.
+// !todo fcntl(fd, F_SETFL, O_NONBLOCK); should be called for every client socket descriptor.
 
 class WebservCore
 {
@@ -30,8 +30,8 @@ class WebservCore
 		std::vector<Client *> _clients;
 
 		// Socket Descriptor Sets for read and write (used in select)
-		// ! overflow in fd_set
-		fd_set _read_sockets, _write_sockets;
+		int		_fds_count;
+		fd_set	_read_sockets, _write_sockets;
 
 		// fd_sets copies used as temporaries in select
 		fd_set select_read_sockets, select_write_sockets;
@@ -54,6 +54,7 @@ class WebservCore
 		void		accept_new_connection_requests();
 		void		serve_connected_clients();
 		int			get_current_nfds() const;
+		bool		is_server_busy() const;
 
 	public:
 		// (*) WebservCore's Main Function

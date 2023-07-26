@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:47:32 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/25 20:02:22 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/26 12:28:36 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,7 @@ Client::Client(int client_socket, int listen_socket) : _is_request_done(false), 
 Client::~Client()
 {
 	// cutting the connection with the client
-	close(client_socket);
-
-
+	close(_client_socket);
 }
 
 // Public Functions
