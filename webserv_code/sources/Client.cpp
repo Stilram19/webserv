@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:47:32 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/26 13:53:44 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/27 16:03:45 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,8 @@
 
 // ************* Constructor & Destructor *************
 
-Client::Client(int client_socket, int listen_socket) : _client_socket(client_socket), _listen_socket(listen_socket), _VServer(NULL) {}
+Client::Client(int client_socket, int listen_socket) : _client_socket(client_socket) \ 
+	, _listen_socket(listen_socket), _VServer(NULL), request(client_socket) {}
 
 Client::~Client()
 {

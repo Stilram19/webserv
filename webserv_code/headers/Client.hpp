@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:40:31 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/26 13:54:06 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/27 17:52:53 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,9 @@ class Client
 		// Clients Configuration
 		VirtualServer *_VServer;
 
+		// Request Handler
+		Request request;
+
 		// (*) Useless Constructors & Copy Assignment
 		Client();
 		Client(const Client &);
@@ -38,9 +41,6 @@ class Client
 		// Constructor & Destructor
 		Client(int, int);
 		~Client();
-	public:
-		// this function answers the question: "Does the client handler already knows its virtual server?"
-		bool is_config_set() const;
 
 	public:
 		// Getters

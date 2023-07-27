@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/26 18:05:29 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/27 15:34:11 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,6 +114,7 @@ void	WebservCore::drop_client(std::vector<Client *>::iterator &it)
 	FD_CLR(client_socket, &_read_sockets);
 	FD_CLR(client_socket, &_write_sockets);
 
+	// !todo check if necessary
 	FD_CLR(client_socket, &select_read_sockets);
 	FD_CLR(client_socket, &select_write_sockets);
 
@@ -166,27 +167,8 @@ void	WebservCore::serve_connected_clients()
 		// (*) Read Client's sent packets, if any.
 		if (FD_ISSET(client_socket, &select_read_sockets))
 		{
-			//!todo handle request reading
-			//!todo assign config to client
-			std::cout << "(*) Received Packet: ";
-			char buffer[11];
-			int	read_bytes = read(client_socket, buffer, 10);
-
-			if (read_bytes == -1)
-			{
-				std::cout << "Client Droped!" << std::endl;
-				drop_client(it);
-				continue ;
-			}
-			buffer[read_bytes] = '\0';
-			if (!strncmp(buffer, "\r\n", 2))
-			{
-				std::cout << "REQUEST READING DONE!" << std::endl;
-				FD_CLR(client_socket, &_read_sockets);
-				FD_SET(client_socket, &_write_sockets);
-				continue ;
-			}
-			std::cout << buffer << std::endl;
+			(*it)->request_handling();
+			continue ;
 		}
 		// (*) Respond to Client, if ready.
 		if (!FD_ISSET(client_socket, &select_write_sockets))
