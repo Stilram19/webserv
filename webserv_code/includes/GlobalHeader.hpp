@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:06:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/27 18:34:34 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/28 19:44:47 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,16 @@
 enum e_request_handling_state
 {
     HEADER_READING = 0, HEADER_PARSING, BODY_READING
+};
+
+enum e_request_status
+{
+    WORKING = 0, NORMAL_TERM, CLIENT_DISCONNECT, BAD_REQUEST
+};
+
+enum e_http_request_methods
+{
+    UNKNOWN = 0, GET, POST, DELETE
 };
 
 class WebservCore;

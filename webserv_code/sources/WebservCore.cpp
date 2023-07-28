@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/27 15:34:11 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/28 20:39:25 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ WebservCore::WebservCore(const std::vector<VirtualServer *> &VServers)
 		if (std::find(endpoints.begin(), endpoints.end(), endpoint) == endpoints.end())
 			endpoints.push_back(endpoint);
 	}
+
 	// Constructing the _listens map
 	for (std::vector<std::pair<std::string, std::string> >::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
 	{
@@ -60,7 +61,7 @@ WebservCore::~WebservCore() {}
 
 // *********************** HELPERS ***********************
 
-int	WebservCore::create_socket(const std::string &hostname, const std::string &port_number)
+int	WebservCore::create_socket(const std::string &hostname, const std::string &port_number) // !incomplete
 {
 	int				connection_socket;
 	struct addrinfo	hints;
@@ -99,7 +100,7 @@ int	WebservCore::create_socket(const std::string &hostname, const std::string &p
 
 Client		*WebservCore::new_client(int client_socket, int listen_socket)
 {
-	Client *new_c = new Client(client_socket, listen_socket);
+	Client *new_c = new Client(client_socket, _listens[listen_socket]);
 
 	_clients.push_back(new_c);
 	return (new_c);
@@ -157,17 +158,30 @@ void	WebservCore::accept_new_connection_requests()
 
 void	WebservCore::serve_connected_clients()
 {
-	int			client_socket;
+	int		client_socket;
+	Client	*client;
 
 	std::cout << "CLIENTS: " << _clients.size() << std::endl;
 	for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); it++)
 	{
-		client_socket = (*it)->get_client_socket();
+		client = (*it);
+		client_socket = client->get_client_socket();
 
 		// (*) Read Client's sent packets, if any.
 		if (FD_ISSET(client_socket, &select_read_sockets))
 		{
-			(*it)->request_handling();
+			client->request_handling();
+			if (client->is_request_done())
+			{
+				// Checking if the request handling terminates due to a client disconnection
+				if (client->get_request_status() == CLIENT_DISCONNECT)
+				{
+					drop_client(it);
+					continue ;
+				}
+				FD_CLR(client_socket, &_read_sockets);
+				FD_SET(client_socket, &_write_sockets);
+			}
 			continue ;
 		}
 		// (*) Respond to Client, if ready.

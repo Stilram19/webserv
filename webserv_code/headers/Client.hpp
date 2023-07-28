@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:40:31 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/27 17:52:53 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/28 18:39:30 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,17 +20,26 @@ class Client
 	private:
 		// (*) Attributes
 
+		// Request Infos
+		bool	_is_request_done;
+		bool	_keep_alive;
+		int		_request_status;
+
 		// socket to read from and write to the client
 		int _client_socket;
 
-		// the listen socket that the client got accepted through (useful as a key to the map of _listens in the WebservCore)
-		int _listen_socket;
+		// reference to the collection of virtual servers listening at the same endpoint
+		// to which the client sent a SYN
+		const std::vector<VirtualServer *> &_VServers;
 
-		// Clients Configuration
+		// Virtual Server
 		VirtualServer *_VServer;
 
+		// Random Name of the file of the request body
+		std::string _request_body_file_name;
+
 		// Request Handler
-		Request request;
+		Request *_request;
 
 		// (*) Useless Constructors & Copy Assignment
 		Client();
@@ -39,13 +48,22 @@ class Client
 
 	public:
 		// Constructor & Destructor
-		Client(int, int);
+		Client(int, const std::vector<VirtualServer *> &);
 		~Client();
 
 	public:
+		// Helpers
+		static void	random_file_name_generation(std::string &);
+		void		new_request();
+	public:
 		// Getters
 		int		get_client_socket() const;
+		bool	is_request_done() const;
+		bool	get_request_status() const;
 
+	public:
+		// Client Handlers
+		void	request_handling();
 };
 
 #endif

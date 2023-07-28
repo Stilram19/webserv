@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/22 17:31:58 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/27 12:30:33 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/28 14:19:08 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 # include "GlobalHeader.hpp"
 
 // To add in ConfigFileParsing: check if there is more than one server with the same server_name and listen informations
-// !todo fcntl(fd, F_SETFL, O_NONBLOCK); should be called for every client socket descriptor.
+// !todo fcntl(fd, F_SETFL, O_NONBLOCK);
 
 class WebservCore
 {
