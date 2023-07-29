@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:06:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/29 11:40:41 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/29 16:57:48 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,11 @@ enum e_http_request_methods
 
 enum e_request_errors
 {
-    CLIENT_DISCONNECT = 0, BAD_REQUEST, NOT_IMPLEMENTED, HTTP_VERSION_NOT_SUPPORTED, 
+    CLIENT_DISCONNECT = 0,
+    BAD_REQUEST = 400,
+    NOT_IMPLEMENTED = 501,
+    HTTP_VERSION_NOT_SUPPORTED = 505,
+    REQUEST_HEADER_FIELDS_TOO_LARGE = 431 // This status code is added later at the 6585 RFC
 };
 
 class WebservCore;

@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:37:48 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/29 12:28:23 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/29 14:38:36 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,4 +89,16 @@ char ParsingHelpers::decode_percent_encoded_character(const char *hexa)
 	first = get_hexa_remainder(first);
 	second = get_hexa_remainder(second);
 	return (first * 16 + second);
+}
+
+int ParsingHelpers::skip_crlf(const char *temp)
+{
+    int i = 0;
+
+    for (i = 0; temp[i]; i += 4)
+    {
+        if (strncmp(temp + i, "\r\n\r\n", 4))
+            break ;
+    }
+    return (i);
 }

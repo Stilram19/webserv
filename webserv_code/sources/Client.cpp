@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:47:32 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/28 19:35:47 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/29 16:11:01 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ bool	Client::get_request_status() const
 
 inline void    Client::new_request()
 {
-    _request = new Request(_client_socket, _request_body_file_name, _VServers);
+    _request = new Request(_client_socket, _request_body_file_name, _VServers, _VServer);
 }
 
 // ******************* SETTERS ********************

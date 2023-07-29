@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:38:20 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/29 12:28:47 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/29 14:39:14 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ class ParsingHelpers
 		static std::string			skip_leading_zeros(const std::string &info);
 		static char					get_hexa_remainder(char remainder);
 		static char					decode_percent_encoded_character(const char *ptr);
+		static int					skip_crlf(const char *temp);
 };
 
 #endif
