@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:37:48 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 19:02:10 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/29 12:28:23 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,4 +66,27 @@ std::string ParsingHelpers::skip_leading_zeros(const std::string &info)
 	while (info[start] == '0')
 		start++;
 	return (info.c_str() + start);
+}
+
+char ParsingHelpers::get_hexa_remainder(char remainder)
+{
+	char decrement = 0;
+
+	if (isdigit(remainder))
+		decrement = '0';
+	else if (islower(remainder))
+		decrement = 'a' + 10;
+	else if (isupper(remainder))
+		decrement = 'A' + 10;
+	return (remainder - decrement);
+}
+
+char ParsingHelpers::decode_percent_encoded_character(const char *hexa)
+{
+	char first = *hexa;
+	char second = *(hexa + 1);
+
+	first = get_hexa_remainder(first);
+	second = get_hexa_remainder(second);
+	return (first * 16 + second);
 }

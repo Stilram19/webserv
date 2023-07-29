@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/28 19:52:17 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/29 12:38:52 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,10 +24,15 @@ class Request
 		bool _keep_alive;
 
 		int			_http_method;
-		std::string url;
+		std::string _request_uri;
+		std::string _resource_path;
+		std::string	_query_string;
+		std::string _fragment;
+		std::string _protocol_version;
 
 		// the request handling status (still working or terminated due to a disconnect, bad request ...)
 		int	_status;
+		int	_error_type;
 
 		// the request handling step (header reading, header parsing, body reading)
 		int	_handling_step;
@@ -55,6 +60,11 @@ class Request
 		// Helpers
 		static void	random_file_name_generation(std::string &file_name);
 		static int	skip_crlf(const char *temp);
+		int			request_line_parsing();
+		int			headers_parsing(int start);
+		int			get_http_method(const std::string &method);
+		void		request_uri_parsing();
+		void		request_uri_decoding();
 
 	private:
 		// Request Handlers

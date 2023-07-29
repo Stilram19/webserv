@@ -6,29 +6,34 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:06:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/28 19:44:47 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/29 11:40:41 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef GLOBAL_HEADER_HPP
 # define GLOBAL_HEADER_HPP
 
-# define MAX_REQUEST_HEADER 8192
+# define REQUEST_HEADER_BUFFER_SIZE 8192
 # define READ_BUFFER_SIZE   100
 
-enum e_request_handling_state
+enum e_request_handling_step
 {
-    HEADER_READING = 0, HEADER_PARSING, BODY_READING
+    HEADER_READING = 0, HEADER_PARSING, BODY_READING, DONE
 };
 
 enum e_request_status
 {
-    WORKING = 0, NORMAL_TERM, CLIENT_DISCONNECT, BAD_REQUEST
+    WORKING = 0, NORMAL_TERM, BAD_TERM
 };
 
 enum e_http_request_methods
 {
-    UNKNOWN = 0, GET, POST, DELETE
+    GET = 0, POST, DELETE, UNSUPPORTED_METHOD, REQUEST_URI_TOO_LONG
+};
+
+enum e_request_errors
+{
+    CLIENT_DISCONNECT = 0, BAD_REQUEST, NOT_IMPLEMENTED, HTTP_VERSION_NOT_SUPPORTED, 
 };
 
 class WebservCore;
