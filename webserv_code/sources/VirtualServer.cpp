@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/23 16:48:40 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 16:36:01 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -208,4 +208,14 @@ const std::string	VirtualServer::get_error_page(int error_number) const
 	{
 		return ("");
 	}
+}
+
+bool	VirtualServer::is_http_method_allowed(const std::string &http_method) const
+{
+	for (std::map<std::string, Location *>::const_iterator it = _locations.begin(); it != _locations.end(); it++)
+	{
+		if (it->second->is_http_method_allowed(http_method))
+			return (true);
+	}
+	return (false);
 }

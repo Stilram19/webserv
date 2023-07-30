@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:37:48 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/29 14:38:36 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 16:25:11 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,4 +101,9 @@ int ParsingHelpers::skip_crlf(const char *temp)
             break ;
     }
     return (i);
+}
+
+bool ParsingHelpers::is_http_method(const std::string &input)
+{
+	return (input == "GET" || input == "POST" || input == "DELETE");
 }

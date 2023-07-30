@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 17:08:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 11:43:09 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 16:35:06 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,15 +38,6 @@ Location::Location()
 Location::~Location() {}
 
 // ********************* HELPERS *********************
-
-// private
-
-bool Location::is_http_method(const std::string &input) const
-{
-	return (input == "GET" || input == "POST" || input == "DELETE");
-}
-
-// public
 
 void Location::display_location_informations() const
 {
@@ -147,10 +138,6 @@ void Location::set_cgi_handler(const std::string &input)
 	_cgi_handler[extension] = cgi_interpret;
 }
 
-// POST DELETE
-
-
-
 void Location::set_allowed_http_method(const std::string &input)
 {
 	int start = 0, end = 0;
@@ -164,7 +151,7 @@ void Location::set_allowed_http_method(const std::string &input)
 			end++;
 		const std::string method = input.substr(start, end - start);
 
-		if (!is_http_method(method))
+		if (!ParsingHelpers::is_http_method(method))
 			throw std::runtime_error("Unkown http method! The Only supported methods are (GET, POST, DELETE)!");
 		_allowed_http_methods.push_back(method);
 
@@ -175,14 +162,14 @@ void Location::set_allowed_http_method(const std::string &input)
 
 // ********************* GETTERS *********************
 
-bool				Location::get_directory_listing() const
+bool	Location::get_directory_listing() const
 {
 	return (_directory_listing);
 }
 
-bool				is_http_method_allowed(const std::string &_http_method) const
+bool	Location::is_http_method_allowed(const std::string &_http_method) const
 {
-	std::vector<std::string>::iterator it = std::find(_allowed_http_methods.begin(), _allowed_http_methods.end(), _http_method);
+	std::vector<std::string>::const_iterator it = std::find(_allowed_http_methods.begin(), _allowed_http_methods.end(), _http_method);
 
 	return (it != _allowed_http_methods.end());
 }

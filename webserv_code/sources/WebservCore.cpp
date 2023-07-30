@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/28 20:39:25 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 19:44:38 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ WebservCore::~WebservCore() {}
 
 // *********************** HELPERS ***********************
 
-int	WebservCore::create_socket(const std::string &hostname, const std::string &port_number) // !incomplete
+int	WebservCore::create_socket(const std::string &hostname, const std::string &port_number)
 {
 	int				connection_socket;
 	struct addrinfo	hints;
@@ -91,7 +91,7 @@ int	WebservCore::create_socket(const std::string &hostname, const std::string &p
 		throw std::runtime_error("Failed to name a socket!");
 	freeaddrinfo(res);
 
-	// Listening
+	//! Listening (backlog)
 	if (listen(connection_socket, 10000))
 		throw std::runtime_error("Failed to listen!");
 
@@ -156,6 +156,28 @@ void	WebservCore::accept_new_connection_requests()
 	}
 }
 
+void	WebservCore::read_from_client(std::vector<Client *>::iterator &it, int client_socket)
+{
+	Client *client = *it;
+
+	client->request_handling();
+
+	// Check if the request is done.
+	if (client->is_request_done())
+	{
+		// Unset client socket from read sockets
+		FD_CLR(client_socket, &_read_sockets);
+
+		// Checking if the request handling terminates due to a client disconnection
+		if (client->did_client_disconnect())
+		{
+			drop_client(it);
+			return ;
+		}
+		FD_SET(client_socket, &_write_sockets);
+	}
+}
+
 void	WebservCore::serve_connected_clients()
 {
 	int		client_socket;
@@ -170,18 +192,7 @@ void	WebservCore::serve_connected_clients()
 		// (*) Read Client's sent packets, if any.
 		if (FD_ISSET(client_socket, &select_read_sockets))
 		{
-			client->request_handling();
-			if (client->is_request_done())
-			{
-				// Checking if the request handling terminates due to a client disconnection
-				if (client->get_request_status() == CLIENT_DISCONNECT)
-				{
-					drop_client(it);
-					continue ;
-				}
-				FD_CLR(client_socket, &_read_sockets);
-				FD_SET(client_socket, &_write_sockets);
-			}
+			read_from_client(it, client_socket);
 			continue ;
 		}
 		// (*) Respond to Client, if ready.

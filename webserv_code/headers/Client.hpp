@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:40:31 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 12:35:16 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 18:58:59 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ class Client
 		// Request Infos
 		bool	_is_request_done;
 		bool	_keep_alive;
+		bool	_client_disconnect;
 		int		_request_status;
 
 		// socket to read from and write to the client
@@ -36,7 +37,7 @@ class Client
 		VirtualServer *_VServer;
 
 		// Random Name of the file of the request body
-		//! unlink in the response 
+		//! unlink in the response
 		std::string _request_body_file_name;
 
 		// Request Handler
@@ -54,13 +55,14 @@ class Client
 
 	public:
 		// Helpers
-		static void	random_file_name_generation(std::string &);
 		void		new_request();
+
 	public:
 		// Getters
 		int		get_client_socket() const;
 		bool	is_request_done() const;
 		bool	get_request_status() const;
+		bool	did_client_disconnect() const;
 
 	public:
 		// Client Handlers

@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/27 12:13:51 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 16:34:09 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,12 +60,13 @@ class VirtualServer
 
 	public:
 		// Getters
-		unsigned int		get_max_client_body_size() const;
-		int					get_port_number() const;
-		const std::string	&get_port_number_str() const;
-		const std::string	&get_server_name() const;
-		const std::string	&get_host_address() const;
-		const std::string	get_error_page(int error_number) const;
+		unsigned int						get_max_client_body_size() const;
+		int									get_port_number() const;
+		const std::string					&get_port_number_str() const;
+		const std::string					&get_server_name() const;
+		const std::string					&get_host_address() const;
+		const std::string					get_error_page(int error_number) const;
+		bool								is_http_method_allowed(const std::string &http_method) const;
 };
 
 #endif

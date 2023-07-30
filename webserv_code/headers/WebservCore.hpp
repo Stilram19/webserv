@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/22 17:31:58 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/28 14:19:08 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 18:47:06 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@ class WebservCore
 		Client		*new_client(int client_socket, int listen_socket);
 		void		drop_client(std::vector<Client *>::iterator &it);
 		void		accept_new_connection_requests();
+		void		read_from_client(std::vector<Client *>::iterator &it, int client_socket);
 		void		serve_connected_clients();
 		int			get_current_nfds() const;
 	public:

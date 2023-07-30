@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:47:32 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/29 16:11:01 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 19:02:27 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,9 @@
 
 // ************* Constructor & Destructor *************
 
-Client::Client(int client_socket, const std::vector<VirtualServer *> &VServers) \ 
-	: _is_request_done(false), _keep_alive(false), _request_status(WORKING), _client_socket(client_socket), _VServers(VServers), _VServer(NULL), _request(NULL) {}
+Client::Client(int client_socket, const std::vector<VirtualServer *> &VServers) 
+	: _is_request_done(false), _keep_alive(false), _client_disconnect(false), _request_status(WORKING), \
+    _client_socket(client_socket), _VServers(VServers), _VServer(NULL), _request(NULL) {}
 
 Client::~Client()
 {
@@ -42,6 +43,11 @@ bool	Client::get_request_status() const
 	return (_request->get_status());	
 }
 
+bool    Client::did_client_disconnect() const
+{
+    return (_client_disconnect);
+}
+
 // ******************* HELPERS *******************
 
 inline void    Client::new_request()
@@ -58,4 +64,5 @@ void	Client::request_handling()
     _request->request_parsing();
     if (_request->get_status() != WORKING)
         _is_request_done = true;
+    _client_disconnect = (_request->get_error_type() == CLIENT_DISCONNECT);
 }

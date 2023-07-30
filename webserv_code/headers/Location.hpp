@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:22:34 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 11:40:59 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 16:35:12 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,9 +39,7 @@ class Location
 		// Constructor & Destructor
 		Location();
 		~Location();
-	private:
-		// private helpers
-		bool is_http_method(const std::string &input) const;
+
 	public:
 		// public helpers
 		void display_location_informations() const;
@@ -50,18 +48,18 @@ class Location
 		void set_location_info(const std::string &info_type, const std::string &info);
 	private:
 		// Setters
-		void set_directory_listing(const std::string &);
-		void set_redirect_path(const std::string &);
-		void set_root_path(const std::string &);
-		void set_index_path(const std::string &);
-		void set_upload_path(const std::string &);
-		void set_cgi_handler(const std::string &);
-		void set_allowed_http_method(const std::string &);
+		void	set_directory_listing(const std::string &);
+		void	set_redirect_path(const std::string &);
+		void	set_root_path(const std::string &);
+		void	set_index_path(const std::string &);
+		void	set_upload_path(const std::string &);
+		void	set_cgi_handler(const std::string &);
+		void	set_allowed_http_method(const std::string &);
 
 	public:
 		// Getters
 		bool				get_directory_listing() const;
-		bool				is_http_method_allowed() const;
+		bool				is_http_method_allowed(const std::string &) const;
 		const std::string	&get_redirect_path() const;
 		const std::string	&get_root_path() const;
 		const std::string	&get_index_path() const;

@@ -6,9 +6,12 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 12:00:45 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 19:32:12 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#ifndef REQUEST_HPP
+# define REQUEST_HPP
 
 # include "GlobalHeader.hpp"
 
@@ -33,7 +36,7 @@ class Request
 		bool _keep_alive;
 
 		// Request Line Infos
-		int			_http_method;
+		std::string	_http_method;
 		std::string _request_uri;
 		std::string _resource_path;
 		std::string	_query_string;
@@ -80,8 +83,10 @@ class Request
 		void		request_uri_decoding();
 		void		extracting_body_consumed_bytes();
 		void		set_the_virtual_server();
-		void		check_body_headers();
-		void		header_validation();
+		void		extracting_body_headers();
+		void		important_headers_extraction();
+		void		extracting_connection_type();
+		void		display_request_header_infos(); // for debugging purposes
 
 	private:
 		// Request Handlers
@@ -91,10 +96,13 @@ class Request
 
 	public:
 		// Getters
-		bool get_status() const;
-		bool get_keep_alive() const;
+		bool	get_status() const;
+		int		get_error_type() const;
+		bool	is_connection_to_be_closed() const;
 
 	public:
 		// Main Method
 		void	request_parsing();
 };
+
+#endif
