@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 17:08:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/22 10:44:32 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 11:43:09 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,6 +178,13 @@ void Location::set_allowed_http_method(const std::string &input)
 bool				Location::get_directory_listing() const
 {
 	return (_directory_listing);
+}
+
+bool				is_http_method_allowed(const std::string &_http_method) const
+{
+	std::vector<std::string>::iterator it = std::find(_allowed_http_methods.begin(), _allowed_http_methods.end(), _http_method);
+
+	return (it != _allowed_http_methods.end());
 }
 
 const std::string	&Location::get_redirect_path() const

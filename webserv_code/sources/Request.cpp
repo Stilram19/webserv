@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/29 18:15:03 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 13:03:56 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,17 @@
 // **************** Constructor & Destructor ****************
 
 Request::Request(int client_socket, std::string &body_file_name, \
-    const std::vector<VirtualServer *> &VServers, VirtualServer * &VServer) \
-    : _keep_alive(false), _http_method(UNSUPPORTED_METHOD), _handling_step(HEADER_READING), _status(WORKING), \ 
-    _error_type(0), _client_socket(client_socket), _body_file_name(body_file_name) \
-    transfer_encoding_chuncked(false), content_length(0), _VServers(VServers), _VServer(VServer)
+    const std::vector<VirtualServer *> &VServers, VirtualServer * &VServer) : _body_file_name(body_file_name), _VServers(VServers), _VServer(VServer)
 {
+    _keep_alive = false;
+    _http_method = UNSUPPORTED_METHOD;
+    _handling_step = HEADER_READING;
+    _status = WORKING;
+    _error_type = 0;
+    _client_socket = client_socket;
+    transfer_encoding_chunked = false;
+    content_length = 0;
+
     // Mapping the Request handling states to their correspondant methods
     _handlers[HEADER_READING] = &Request::header_reader;
     _handlers[HEADER_PARSING] = &Request::header_parser;
@@ -78,11 +84,11 @@ int Request::request_line_parsing()
 
     // (*) Extracting The Protocol Version
     start = ParsingHelpers::skip_blank(_header_buffer.c_str(), end);
-    end = _header_buffer.find("\r\n", end);
+    end = _header_buffer.find("\r\n", start);
     std::string protocol_version = _header_buffer.substr(start, end - start);
-
     if (protocol_version != "HTTP/1.1")
         throw HTTP_VERSION_NOT_SUPPORTED;
+
     return (end + 2);
 }
 
@@ -122,9 +128,9 @@ void    Request::headers_parsing(int start)
         }
     }
 
-    if (_VServer)
+    // setting the virtual server, if not already set.
+    if (!_VServer)
         set_the_virtual_server();
-    check_body_headers();
 }
 
 int Request::get_http_method(const std::string &method)
@@ -223,29 +229,51 @@ void    Request::check_body_headers()
 
     it1 = std::find(_request_headers.begin(), _request_headers.end(), "Content-Length");
     it2 = std::find(_request_headers.begin(), _request_headers.end(), "Transfer-Encoding");
-    if (it1 == _request_headers.end() && it2 == _request_headers.end())
-        throw BAD_REQUEST;
-    if (it1 != _request_headers.end() && it2 != _request_headers.end())
-        throw BAD_REQUEST;
-    if ((it1 != _request_headers.end() || it2 != _request_headers.end())
-        && _http_method != POST)
-        throw BAD_REQUEST;
 
-    // Extract the headers values
-    if (it2 != _request_headers.end())
+    if (_http_method == POST)
     {
-        // Transfer-Encoding has at most one value
-        if (it2->second.size() != 1)
+        // Exactly one of the "Content-Length, Transfer-Encoding" headers must be there.
+        if (it1 == _request_header.end() && it2 == _request_header.end())
             throw BAD_REQUEST;
-        if (it2->second.front() != "chunked")
+        if (it1 != _request_header.end() && it2 != _request_header.end())
             throw BAD_REQUEST;
-        transfer_encoding_chunked = true;
+
+        // Extracting the values
+        if (it2 != _request_header.end())
+        {
+            transfer_encoding_chunked = (it2->second.back() == "chunked");
+            if (!transfer_endcoding_chunked)
+                throw NOT_IMPLEMENTED;
+            return ;
+        }
+        content_length = ParsingHelpers::my_stoi(it1->second.back());
+
+        if (content_length > VServer->_max_client_body_size)
+            throw REQUEST_ENTITY_TOO_LARGE;
         return ;
     }
-    // Content-Length has at most one value
-    if (it1->second.size() != 1)
+
+    // Checking if body related headers exit in the context of a GET or DELETE method.
+    if (it1 != _request_header.end() || it2 != _request_header.end())
         throw BAD_REQUEST;
-    content_length = ParsingHelpers::my_stoi(it1->second.front());
+}
+
+void    Request::header_validation()
+{
+    // Cheking if the http method is allowed
+    std::map<std::string, Location *>::iterator it;
+
+    for (it = VServer->_locations.begin(); it != VServer->_locations.end(); it++)
+    {
+        Location *location = it->second;
+        if (location->is_http_method_allowed())
+            break ;
+    }
+    if (it == VServer->_locations.end())
+        throw METHOD_NOT_ALLOWED;
+
+    // Checking the body related headers
+    check_body_headers();
 }
 
 // **************** REQUEST HANDLERS ****************
@@ -286,11 +314,22 @@ void    Request::header_parser()
 
     // Parsing the headers (key : value)
     headers_parsing(curr_index);
+
+    // Header Validation
+    header_validation();
+
+    if (_http_method)
+    {
+        _handling_step = BODY_READING;
+        return ;
+    }
+    _status = NORMAL_TERM;
 }
 
 void    Request::body_reader()
 {
-
+    // Body reader
+    _status = NORMAL_TERM;
 }
 
 // **************** GETTERS ****************

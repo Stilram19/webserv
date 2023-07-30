@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/29 17:57:18 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 12:00:45 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,15 @@ class Request
 		typedef void (Request::*PtrToRequestHandler)();
 	private:
 		// (*) Attributes
+
+		// Reference to the body_file_name field in the client
+		std::string &_body_file_name;
+
+		// the client server is in this collection
+		const std::vector<VirtualServer *> &_VServers;
+
+		// Reference to the client's Virtual Server
+		VirtualServer * &_VServer;
 
 		// set when the client requests the server to keep the connection open for incomming requests
 		bool _keep_alive;
@@ -41,19 +50,12 @@ class Request
 		int	_handling_step;
 
 		int	_client_socket;
-		std::string &_body_file_name;
 		std::string _header_buffer;
 		std::string _body_consumed_bytes;
 
 		// Body related headers
 		bool	transfer_encoding_chunked;
 		size_t	content_length;
-
-		// the client server is in this collection
-		const std::vector<VirtualServer *> &_VServers;
-
-		// Reference to the client's Virtual Server
-		VirtualServer * &_VServer;
 
 		// key : the handling step | Value : the corresponding handler method
 		std::map<int, PtrToRequestHandler>	_handlers;
@@ -79,6 +81,7 @@ class Request
 		void		extracting_body_consumed_bytes();
 		void		set_the_virtual_server();
 		void		check_body_headers();
+		void		header_validation();
 
 	private:
 		// Request Handlers

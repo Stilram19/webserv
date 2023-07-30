@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:22:34 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/21 19:12:24 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 11:40:59 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,7 @@ class Location
 	public:
 		// Getters
 		bool				get_directory_listing() const;
+		bool				is_http_method_allowed() const;
 		const std::string	&get_redirect_path() const;
 		const std::string	&get_root_path() const;
 		const std::string	&get_index_path() const;

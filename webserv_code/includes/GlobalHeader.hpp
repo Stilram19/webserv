@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:06:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/29 16:57:48 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/30 12:54:50 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 
 enum e_request_handling_step
 {
-    HEADER_READING = 0, HEADER_PARSING, BODY_READING, DONE
+    HEADER_READING = 0, HEADER_PARSING, BODY_READING
 };
 
 enum e_request_status
@@ -37,7 +37,9 @@ enum e_request_errors
     BAD_REQUEST = 400,
     NOT_IMPLEMENTED = 501,
     HTTP_VERSION_NOT_SUPPORTED = 505,
-    REQUEST_HEADER_FIELDS_TOO_LARGE = 431 // This status code is added later at the 6585 RFC
+    REQUEST_HEADER_FIELDS_TOO_LARGE = 431, // This status code is added later at the 6585 RFC
+    METHOD_NOT_ALLOWED = 405,
+    REQUEST_ENTITY_TOO_LARGE = 413,
 };
 
 class WebservCore;
