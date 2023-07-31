@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 19:44:38 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/31 10:39:14 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,15 +165,14 @@ void	WebservCore::read_from_client(std::vector<Client *>::iterator &it, int clie
 	// Check if the request is done.
 	if (client->is_request_done())
 	{
-		// Unset client socket from read sockets
-		FD_CLR(client_socket, &_read_sockets);
-
 		// Checking if the request handling terminates due to a client disconnection
 		if (client->did_client_disconnect())
 		{
 			drop_client(it);
 			return ;
 		}
+		// Unset the socket from read, and set it to write.
+		FD_CLR(client_socket, &_read_sockets);
 		FD_SET(client_socket, &_write_sockets);
 	}
 }
@@ -200,6 +199,12 @@ void	WebservCore::serve_connected_clients()
 			continue ;
 
 		// respond
+		// if (write(client_socket, "hello", 5) == -1)
+		// {
+		// 	std::cout << "Client Droped!" << std::endl;
+		// 	drop_client(it);
+		// 	continue ;
+		// }
 		std::cout << "I'm busy! Can't respond now!" << std::endl;
 		drop_client(it);
 		// drop_client();

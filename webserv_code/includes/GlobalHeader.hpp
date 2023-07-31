@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:06:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 16:46:23 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/31 13:44:12 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 
 enum e_request_handling_step
 {
-    HEADER_READING = 0, HEADER_PARSING, BODY_READING
+    HEADER_READING = 0, BODY_READING
 };
 
 enum e_request_status
@@ -35,7 +35,8 @@ enum e_request_errors
     REQUEST_HEADER_FIELDS_TOO_LARGE = 431, // This status code is added later at the 6585 RFC
     METHOD_NOT_ALLOWED = 405,
     REQUEST_ENTITY_TOO_LARGE = 413,
-    REQUEST_URI_TOO_LONG = 414
+    REQUEST_URI_TOO_LONG = 414,
+    INTERNAL_SERVER_ERROR = 500
 };
 
 class WebservCore;

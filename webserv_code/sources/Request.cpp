@@ -6,11 +6,21 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 20:45:33 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/31 14:25:12 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Request.hpp"
+
+#define ANSI_COLOR_RESET   "\x1b[0m"
+#define ANSI_COLOR_BLACK   "\x1b[30m"
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_WHITE   "\x1b[37m"
 
 // **************** Constructor & Destructor ****************
 
@@ -24,11 +34,11 @@ Request::Request(int client_socket, std::string &body_file_name, \
     _error_type = -1;
     _client_socket = client_socket;
     transfer_encoding_chunked = false;
-    content_length = -1;
+    content_length = 0;
+    body_read_bytes = 0;
 
     // Mapping the Request handling states to their correspondant methods
     _handlers[HEADER_READING] = &Request::header_reader;
-    _handlers[HEADER_PARSING] = &Request::header_parser;
     _handlers[BODY_READING] = &Request::body_reader;
 }
 
@@ -104,9 +114,6 @@ void    Request::headers_parsing(int start)
         end = _header_buffer.find("\r\n", start);
         value = _header_buffer.substr(start, end - start);
         start = end + 2;
-
-        std::cout << "KEY: <<<<" << key << ">>>>" << std::endl;
-        std::cout << "VALUE: <<<<" << value << ">>>>" << std::endl;
 
         // Checking if the header is too long
         if (key.length() + value.length() >= REQUEST_HEADER_BUFFER_SIZE)
@@ -195,8 +202,11 @@ void    Request::extracting_body_consumed_bytes()
     int start = _header_buffer.find("\r\n\r\n");
 
     start += 4;
-    _body_consumed_bytes = _header_buffer.substr(start);
+    _body_buffer = _header_buffer.substr(start);
     _header_buffer[start] = '\0';
+
+    // Extracting the raw body chunk from the sent packet
+    extract_body_chunk();
 }
 
 void		Request::set_the_virtual_server()
@@ -291,32 +301,88 @@ void    Request::extracting_connection_type()
 
 void    Request::display_request_header_infos()
 {
-    std::cout << "***************** HEADER PARSING INFOS *****************" << std::endl;
+    std::cout << ANSI_COLOR_CYAN << "***************** HEADER PARSING INFOS *****************" << ANSI_COLOR_RESET << std::endl;
     std::cout << "Http Method: " << "'" << _http_method << "'" << std::endl;
     std::cout << "Request uri: " << "'" << _request_uri << "'" << std::endl;
     std::cout << "Resource path: " << "'" << _resource_path << "'" << std::endl;
     std::cout << "query string: " << "'" << _query_string << "'" << std::endl;
     std::cout << "fragment: " << "'" << _fragment << "'" << std::endl;
+    std::cout << "==> EXTRACTED HEADERS: " << std::endl;
+
+    for (std::map<std::string, std::vector<std::string> >::const_iterator it = _request_headers.begin(); it != _request_headers.end(); it++)
+    {
+        std::cout << ANSI_COLOR_BLUE << it->first << ": " << ANSI_COLOR_RESET;
+        //std::cout << "Values: ";
+        for (std::vector<std::string>::const_iterator it1 = it->second.begin(); it1 != it->second.end(); it1++)
+        {
+            std::cout << *it1;
+            if (it1 + 1 != it->second.end())
+                std::cout << ", ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+void    Request::read_sent_packet(char *buffer)
+{
+    int     read_bytes = read(_client_socket, buffer, READ_BUFFER_SIZE);
+
+    if (read_bytes <= 0)
+        throw CLIENT_DISCONNECT;
+
+    buffer[read_bytes] = '\0';
+}
+
+void    Request::get_chunk_size()
+{
+    if (chunk_size != -1)
+        return ;
+}
+
+void    Request::extract_body_chunk()
+{
+    if (!transfer_encoding_chunked)
+    {
+        // (*) Content length handler
+
+        body_read_bytes += _body_buffer.length();
+        if (body_read_bytes > content_length)
+            throw REQUEST_ENTITY_TOO_LARGE;
+        if (body_read_bytes == content_length)
+            _status = NORMAL_TERM;
+        body_buffer_flushing();
+        return ;
+    }
+    // (*) transfer-encoding chunked handler
+
+}
+
+void    Request::body_buffer_flushing()
+{
+    int fd = open(_body_file_name.c_str(), O_WRONLY | O_APPEND);
+
+    if (fd == -1)
+        throw INTERNAL_SERVER_ERROR;
+    write(fd, _body_buffer.c_str(), _body_buffer.length());
+
+    _body_buffer = "";
 }
 
 // **************** REQUEST HANDLERS ****************
 
 void    Request::header_reader()
 {
-    std::cout << "#HEADER READER CALLED#" << std::endl;
     int     i = 0;
-    char    temp[READ_BUFFER_SIZE + 1];
-    int     read_bytes = read(_client_socket, temp, READ_BUFFER_SIZE);
+    char    buffer[READ_BUFFER_SIZE + 1];
 
-    if (read_bytes <= 0)
-        throw CLIENT_DISCONNECT;
-    temp[read_bytes] = '\0';
+    read_sent_packet(buffer);
 
     //std::cout << "SENT_PACKET: <<<<" << temp << ">>>>" << std::endl;
 
     if (_header_buffer.empty())
-        i = ParsingHelpers::skip_crlf(temp);
-    _header_buffer += temp + i;
+        i = ParsingHelpers::skip_crlf(buffer);
+    _header_buffer += buffer + i;
 
     // checking if the header reader is done
     if (_header_buffer.find("\r\n\r\n") != std::string::npos)
@@ -324,7 +390,7 @@ void    Request::header_reader()
         // parsing the read header.
         header_parser();
         //  debugging
-        std::cout << "======> HEADER: " << std::endl;
+        std::cout << ANSI_COLOR_GREEN << "======> HEADER: " << ANSI_COLOR_RESET << std::endl;
         std::cout << _header_buffer << std::endl;
         _handling_step = NORMAL_TERM;
     }
@@ -332,7 +398,6 @@ void    Request::header_reader()
 
 void    Request::header_parser()
 {
-    std::cout << "#HEADER PARSER CALLED# " << std::endl;
     int curr_index;
 
     curr_index = request_line_parsing();
@@ -342,28 +407,34 @@ void    Request::header_parser()
     // ==> Generating a random file name for the body file.
     if (_http_method == "POST")
     {
-        extracting_body_consumed_bytes();
         random_file_name_generation(_body_file_name);
+        extracting_body_consumed_bytes();
     }
 
     // Parsing the headers (key : value)
     headers_parsing(curr_index);
 
+    std::cout << "HERE" << std::endl;
 
 
     // Extrating usefull headers values
     important_headers_extraction();
 
+
     // if the method is post
     // ==> the control of the request is transfered to the body reader
     // else
     // ==> the request is done
+    display_request_header_infos();
+
     if (_http_method == "POST")
     {
         _handling_step = BODY_READING;
+
+        if (!_body_buffer.empty())
+            body_reader();
         return ;
     }
-    display_request_header_infos();
     _status = NORMAL_TERM;
 }
 
@@ -371,8 +442,14 @@ void    Request::body_reader()
 {
     // Body reader
 
-    std::cout << "#BODY READER CALLED#" << std::endl;
-    _status = NORMAL_TERM;
+    // std::cout << "#BODY READER CALLED#" << std::endl;
+    char    buffer[READ_BUFFER_SIZE + 1];
+
+    read_sent_packet(buffer);
+    _body_buffer += buffer;
+
+    // Extracting the raw body chunk from the sent packet
+    extract_body_chunk();
 }
 
 // **************** GETTERS ****************

@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 19:32:12 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/31 13:42:26 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,11 +54,12 @@ class Request
 
 		int	_client_socket;
 		std::string _header_buffer;
-		std::string _body_consumed_bytes;
+		std::string _body_buffer;
 
-		// Body related headers
+		// Body related infos
 		bool	transfer_encoding_chunked;
 		size_t	content_length;
+		size_t	body_read_bytes;
 
 		// key : the handling step | Value : the corresponding handler method
 		std::map<int, PtrToRequestHandler>	_handlers;
@@ -87,6 +88,9 @@ class Request
 		void		important_headers_extraction();
 		void		extracting_connection_type();
 		void		display_request_header_infos(); // for debugging purposes
+		void		extract_body_chunk();
+		void		body_buffer_flushing();
+		void		read_sent_packet(char *buffer);
 
 	private:
 		// Request Handlers

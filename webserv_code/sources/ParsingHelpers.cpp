@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:37:48 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 16:25:11 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/07/31 10:58:37 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,9 +75,9 @@ char ParsingHelpers::get_hexa_remainder(char remainder)
 	if (isdigit(remainder))
 		decrement = '0';
 	else if (islower(remainder))
-		decrement = 'a' + 10;
+		decrement = 'a' - 10;
 	else if (isupper(remainder))
-		decrement = 'A' + 10;
+		decrement = 'A' - 10;
 	return (remainder - decrement);
 }
 
