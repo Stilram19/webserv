@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   TEChunkedMiddleWare.cpp                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/01 11:22:19 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/03 23:00:38 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/04 14:50:12 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,24 +35,25 @@ void    TEChunkedMiddleWare::extract_chunk()
 {
     RawDataBuffer temp = iner_buffer.substr(0, curr_chunk_size);
     extracted_chunk.append(temp.c_str(), temp.length());
+    std::cout << "APPENDED!!!!" << std::endl;
     // std::cout << "CURRENT CHUNK SIZE: " << curr_chunk_size << "| EXTRACTED CHUNK LENGTH: " << extracted_chunk.length() << std::endl;
     curr_chunk_size -= extracted_chunk.length();
     iner_buffer.right_shift(extracted_chunk.length());
+
+    std::cout << "RIGHT SHIFTED!!!!!" << std::endl;
 
     if (!curr_chunk_size)
     {
         // Marking the end of the chunk.
         no_chunk_currently = true;
-
-        // skipping the last "\r\n" that marks the end of the chunk.
-        iner_buffer.right_shift(2);
     }
 }
 
 void TEChunkedMiddleWare::_extract_body_chunk(const char *body_packet, size_t len)
 {
-    if (len)
-        iner_buffer.append(body_packet, len);
+    iner_buffer.append(body_packet, len);
+
+    std::cout << "APPENDED" << std::endl;
 
     if (iner_buffer.empty())
         return ;
@@ -60,15 +61,23 @@ void TEChunkedMiddleWare::_extract_body_chunk(const char *body_packet, size_t le
     // Extracting the size of the next body chunk, if not already extracted.
     if (no_chunk_currently)
     {
+        // skipping the "\r\n" that marks the end of the previous chunk, if any.
+        if (iner_buffer.find("\r\n") == 0)
+            iner_buffer.right_shift(2);
+
+        // looking for "\r\n" that marks the end of the size of the incoming chunk
         if (iner_buffer.find("\r\n") == std::string::npos)
             return ;
         extract_chunk_size();
+
+        std::cout << "SIZE EXTRACTED" << std::endl;
         // if 0 is read as chunk size, it means the end of the body
         if (end_of_body)
             return ;
     }
     extract_chunk();
-    _extract_body_chunk("", 0);
+    std::cout << "CHUNK EXTRACTED" << std::endl;
+    //_extract_body_chunk("", 0);
 }
 
 RawDataBuffer TEChunkedMiddleWare::get_extracted_chunk()

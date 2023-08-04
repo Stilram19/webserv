@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RawDataBuffer.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/03 13:06:41 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/03 22:01:06 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/04 14:42:41 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,9 @@ RawDataBuffer::~RawDataBuffer()
 
 void RawDataBuffer::append(const char *data, size_t len)
 {
+    if (!len)
+        return ;
+
     char *new_data = new char[_len + len + 1];
 
     // Copying old data
@@ -141,5 +144,8 @@ void    RawDataBuffer::clear()
 void    RawDataBuffer::right_shift(size_t new_start)
 {
     std::cout << "NEW LENGTH: " <<  _len - new_start << std::endl;
+    std::cout << "_LEN: " << _len << std::endl;
+    std::cout << "_NEW_START: " << new_start << std::endl;
     *this = substr(new_start, _len - new_start);
+    std::cout << "NO SEGFAULT HERE" << std::endl;
 }
