@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/03 13:06:41 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/04 14:42:41 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/04 16:38:26 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,9 +62,6 @@ void RawDataBuffer::append(const char *data, size_t len)
     char *new_data = new char[_len + len + 1];
 
     // Copying old data
-
-    if (!_data && _len)
-        std::cout << "NULL POINTERR: " << _len << std::endl;
     for (size_t i = 0; i < _len; i++)
         new_data[i] = _data[i];
 

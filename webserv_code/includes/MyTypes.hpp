@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   MyTypes.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 13:46:58 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/03 22:42:39 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/04 15:40:24 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define MY_TYPES_HPP
 
 # define REQUEST_HEADER_BUFFER_SIZE 8192
-# define READ_BUFFER_SIZE   1024
+# define READ_BUFFER_SIZE   1048576
 
 enum e_request_handling_step
 {

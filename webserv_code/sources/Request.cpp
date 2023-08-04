@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/03 21:12:56 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/04 15:59:22 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,7 +215,7 @@ void    Request::extracting_body_consumed_bytes()
     if (!_consumed_body_bytes_size)
         return ;
     *_consumed_body_bytes = _raw_header_buffer->substr(start, _consumed_body_bytes_size);
-    std::cout << "************************* HERE: " << _consumed_body_bytes->c_str() << std::endl;
+    // std::cout << "************************* HERE: " << _consumed_body_bytes->c_str() << std::endl;
 }
 
 void		Request::set_the_virtual_server()
@@ -360,7 +360,7 @@ void    Request::extract_body_chunk(const char *body_packet, size_t read_bytes)
 
     // (*) transfer-encoding chunked handler
     RawDataBuffer chunk = te_chunked_middle_ware.extract_body_chunk(body_packet, read_bytes);
-    std::cout << "||||||READ CHUNK: " << chunk.c_str() << "||||||" << "CHUNK SIZE: " << chunk.length() << std::endl;
+    //std::cout << "||||||READ CHUNK: " << chunk.c_str() << "||||||" << "CHUNK SIZE: " << chunk.length() << std::endl;
     append_chunk_to_body_file(chunk.c_str(), chunk.length());
 }
 

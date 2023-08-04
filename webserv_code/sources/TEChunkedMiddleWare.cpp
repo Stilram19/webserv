@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/01 11:22:19 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/04 14:50:12 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/04 16:46:17 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,12 +35,10 @@ void    TEChunkedMiddleWare::extract_chunk()
 {
     RawDataBuffer temp = iner_buffer.substr(0, curr_chunk_size);
     extracted_chunk.append(temp.c_str(), temp.length());
-    std::cout << "APPENDED!!!!" << std::endl;
     // std::cout << "CURRENT CHUNK SIZE: " << curr_chunk_size << "| EXTRACTED CHUNK LENGTH: " << extracted_chunk.length() << std::endl;
-    curr_chunk_size -= extracted_chunk.length();
-    iner_buffer.right_shift(extracted_chunk.length());
+    curr_chunk_size -= temp.length();
 
-    std::cout << "RIGHT SHIFTED!!!!!" << std::endl;
+    iner_buffer.right_shift(temp.length());
 
     if (!curr_chunk_size)
     {
@@ -52,9 +50,6 @@ void    TEChunkedMiddleWare::extract_chunk()
 void TEChunkedMiddleWare::_extract_body_chunk(const char *body_packet, size_t len)
 {
     iner_buffer.append(body_packet, len);
-
-    std::cout << "APPENDED" << std::endl;
-
     if (iner_buffer.empty())
         return ;
 
@@ -69,15 +64,13 @@ void TEChunkedMiddleWare::_extract_body_chunk(const char *body_packet, size_t le
         if (iner_buffer.find("\r\n") == std::string::npos)
             return ;
         extract_chunk_size();
-
-        std::cout << "SIZE EXTRACTED" << std::endl;
         // if 0 is read as chunk size, it means the end of the body
         if (end_of_body)
             return ;
     }
     extract_chunk();
-    std::cout << "CHUNK EXTRACTED" << std::endl;
-    //_extract_body_chunk("", 0);
+
+    _extract_body_chunk("", 0);
 }
 
 RawDataBuffer TEChunkedMiddleWare::get_extracted_chunk()
