@@ -1,20 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   GlobalHeader.hpp                                   :+:      :+:    :+:   */
+/*   MyTypes.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/16 16:06:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/31 13:44:12 by obednaou         ###   ########.fr       */
+/*   Created: 2023/08/02 13:46:58 by codespace         #+#    #+#             */
+/*   Updated: 2023/08/03 22:42:39 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef GLOBAL_HEADER_HPP
-# define GLOBAL_HEADER_HPP
+#ifndef MY_TYPES_HPP
+# define MY_TYPES_HPP
 
 # define REQUEST_HEADER_BUFFER_SIZE 8192
-# define READ_BUFFER_SIZE   100
+# define READ_BUFFER_SIZE   1024
 
 enum e_request_handling_step
 {
@@ -39,32 +39,14 @@ enum e_request_errors
     INTERNAL_SERVER_ERROR = 500
 };
 
-class WebservCore;
-
-class Client;
-
-class Request;
-
-class ConfigFileParser;
-
-class VirtualServer;
-
-class Location;
-
-# include "include.hpp"
-
-# include "ParsingHelpers.hpp"
-
-# include "ConfigFileParser.hpp"
-
-# include "VirtualServer.hpp"
-
-# include "Location.hpp"
-
-# include "Request.hpp"
-
-# include "Client.hpp"
-
-# include "WebservCore.hpp"
+# define ANSI_COLOR_RESET   "\x1b[0m"
+# define ANSI_COLOR_BLACK   "\x1b[30m"
+# define ANSI_COLOR_RED     "\x1b[31m"
+# define ANSI_COLOR_GREEN   "\x1b[32m"
+# define ANSI_COLOR_YELLOW  "\x1b[33m"
+# define ANSI_COLOR_BLUE    "\x1b[34m"
+# define ANSI_COLOR_MAGENTA "\x1b[35m"
+# define ANSI_COLOR_CYAN    "\x1b[36m"
+# define ANSI_COLOR_WHITE   "\x1b[37m"
 
 # endif

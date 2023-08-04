@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebservCore.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/31 10:39:14 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 15:28:23 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ int	WebservCore::create_socket(const std::string &hostname, const std::string &p
 	// Setting the SO_REUSEADDR and SO_NOSIGPIPE flags at the SOL_SOCKET level.
 	int set_option_on = 1;
 	setsockopt(connection_socket,  SOL_SOCKET,  SO_REUSEADDR , &set_option_on, sizeof(set_option_on));
-    setsockopt(connection_socket,  SOL_SOCKET,  SO_NOSIGPIPE, &set_option_on, sizeof(set_option_on));
+    // setsockopt(connection_socket,  SOL_SOCKET,  SO_NOSIGPIPE, &set_option_on, sizeof(set_option_on));
 
 	// Giving the socket a name
 	if (bind(connection_socket, res->ai_addr, res->ai_addrlen))
@@ -115,10 +115,6 @@ void	WebservCore::drop_client(std::vector<Client *>::iterator &it)
 	FD_CLR(client_socket, &_read_sockets);
 	FD_CLR(client_socket, &_write_sockets);
 
-	// !todo check if necessary
-	FD_CLR(client_socket, &select_read_sockets);
-	FD_CLR(client_socket, &select_write_sockets);
-
 	// destroying the client object ==> releasing the heap memory reserved to it ==> removing the useless pointer from the _client vector
 	delete client;
 	it = _clients.erase(it) - 1;
@@ -130,19 +126,21 @@ void	WebservCore::accept_new_connection_requests()
 	{
 		socklen_t	addr_len;
 		int			listen_socket = it->first;
-		struct sockaddr client_addr;
+		// struct sockaddr client_addr;
 
 		// Checking if a SYN was sent to this listen socket
 		if (!FD_ISSET(listen_socket, &select_read_sockets))
 			continue ;
 
 		// Send SYN-ACK to client.
-		int client_socket = accept(listen_socket, &client_addr, &addr_len);
+		int client_socket = accept(listen_socket, NULL, &addr_len);
 
-		std::cout << "ACCEPTED!" << std::endl;
+		std::cout << client_socket << std::endl;
+		std::cout << "ERRNO: " << errno << std::endl;
 		if (client_socket == -1)
 			return ;
 
+		std::cout << "ACCEPTED!" << std::endl;
 		// Setting the new_client's socket in read_sockets, to be selected for read.
 		if (client_socket >= FD_SETSIZE)
 		{
@@ -246,8 +244,8 @@ void	WebservCore::launch_server()
 		nfds = get_current_nfds();
 
 		// Using temporaries of read and write sockets (select overwrites the content of fd sets)
-		FD_COPY(&_read_sockets, &select_read_sockets);
-		FD_COPY(&_write_sockets, &select_write_sockets);
+		memcpy(&select_read_sockets, &_read_sockets, sizeof(fd_set));
+		memcpy(&select_write_sockets, &_write_sockets, sizeof(fd_set));
 
 		//!debugging
 		std::cout << "Selecting..." << std::endl;

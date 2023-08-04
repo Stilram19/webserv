@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/18 08:41:50 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/26 15:13:17 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 14:05:37 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "GlobalHeader.hpp"
+# include "ConfigFileParser.hpp"
+# include "WebservCore.hpp"
 
 int	main(int argc, char **argv)
 {
@@ -28,7 +29,6 @@ int	main(int argc, char **argv)
 		WebservCore webserv(parser.get_parsing_result());
 		webserv.launch_server();
 	}
-
 	catch (std::exception &e)
 	{
 		std::cerr << e.what() << std::endl;

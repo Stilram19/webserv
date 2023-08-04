@@ -3,17 +3,20 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:40:31 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 18:58:59 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/03 17:19:06 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# include "GlobalHeader.hpp"
+class VirtualServer;
+class Request;
+
+# include "include.hpp"
 
 class Client
 {
@@ -33,7 +36,7 @@ class Client
 		// to which the client sent a SYN
 		const std::vector<VirtualServer *> &_VServers;
 
-		// Virtual Server
+		// ! Configuration (it can be location)
 		VirtualServer *_VServer;
 
 		// Random Name of the file of the request body
@@ -68,5 +71,8 @@ class Client
 		// Client Handlers
 		void	request_handling();
 };
+
+# include "Request.hpp"
+# include "VirtualServer.hpp"
 
 #endif

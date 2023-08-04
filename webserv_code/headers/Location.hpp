@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Location.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:22:34 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 16:35:12 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 13:32:10 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef LOCATION_HPP
 # define LOCATION_HPP
 
-# include "GlobalHeader.hpp"
+# include "include.hpp"
 
 class Location
 {

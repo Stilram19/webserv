@@ -3,17 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   VirtualServer.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 16:34:09 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 13:52:17 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef VIRTUAL_SERVER_HPP
 # define VIRTUAL_SERVER_HPP
 
-# include "GlobalHeader.hpp"
+class Location;
+
+# include "include.hpp"
 
 class VirtualServer
 {
@@ -68,5 +70,7 @@ class VirtualServer
 		const std::string					get_error_page(int error_number) const;
 		bool								is_http_method_allowed(const std::string &http_method) const;
 };
+
+# include "Location.hpp"
 
 #endif

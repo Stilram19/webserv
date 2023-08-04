@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   VirtualServer.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 16:36:01 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 15:12:52 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ void VirtualServer::set_server_info(const std::string &info_type, const std::str
 		location->set_location_info(info_type, info);
 		return ;
 	}
-	for (std::map<std::string, PtrToSetter>::const_iterator it = _setters.cbegin(); it != _setters.cend(); it++)
+	for (std::map<std::string, PtrToSetter>::const_iterator it = _setters.begin(); it != _setters.end(); it++)
 	{
 		if (it->first == info_type)
 		{

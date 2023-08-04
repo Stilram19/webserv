@@ -3,17 +3,20 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigFileParser.hpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:23 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/23 15:29:14 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 13:51:14 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONFIG_FILE_PARSER_HPP
 # define CONFIG_FILE_PARSER_HPP
 
-# include "GlobalHeader.hpp"
+class Location;
+class VirtualServer;
+
+# include "include.hpp"
 
 class ConfigFileParser
 {
@@ -100,5 +103,7 @@ class ConfigFileParser
 		// ConfigFileParser Main Method
 		void	config_file_parsing();
 };
+
+# include "VirtualServer.hpp"
 
 #endif

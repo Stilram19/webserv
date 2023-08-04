@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:47:32 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 19:02:27 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 16:01:03 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,7 @@ void	Client::request_handling()
 {
     if (!_request)
         new_request();
+    // std::cout << "FINE" << std::endl;
     _request->request_parsing();
     if (_request->get_status() != WORKING)
         _is_request_done = true;

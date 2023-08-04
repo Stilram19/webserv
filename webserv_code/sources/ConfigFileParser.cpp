@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigFileParser.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/26 14:48:56 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 13:54:02 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ int ConfigFileParser::count_and_skip_words(const char *ptr, int *index_ptr) cons
 void	ConfigFileParser::buffering_input_file()
 {
 	std::string read_line;
-	std::ifstream input_stream(_filename);
+	std::ifstream input_stream(_filename.c_str());
 
 	if (!input_stream.is_open())
 		throw std::runtime_error("Can't open file!");

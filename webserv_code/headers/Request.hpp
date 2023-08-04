@@ -3,17 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/31 13:42:26 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/03 14:53:18 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef REQUEST_HPP
 # define REQUEST_HPP
 
-# include "GlobalHeader.hpp"
+# include "TEChunkedMiddleWare.hpp"
+
+class VirtualServer;
 
 class Request
 {
@@ -52,14 +54,20 @@ class Request
 		// the request handling step (header reading, header parsing, body reading)
 		int	_handling_step;
 
-		int	_client_socket;
-		std::string _header_buffer;
-		std::string _body_buffer;
+		int				_client_socket;
+		size_t			header_read_bytes;
+		RawDataBuffer	*_raw_header_buffer;
+		std::string		_header_buffer;
 
-		// Body related infos
-		bool	transfer_encoding_chunked;
-		size_t	content_length;
-		size_t	body_read_bytes;
+		// Body related
+		bool			transfer_encoding_chunked;
+		size_t			content_length;
+		size_t			body_read_bytes;
+		size_t			_consumed_body_bytes_size;
+		RawDataBuffer	*_consumed_body_bytes;
+
+		// 'Transfer-Encoding: chunked' handler
+		TEChunkedMiddleWare te_chunked_middle_ware;
 
 		// key : the handling step | Value : the corresponding handler method
 		std::map<int, PtrToRequestHandler>	_handlers;
@@ -88,9 +96,9 @@ class Request
 		void		important_headers_extraction();
 		void		extracting_connection_type();
 		void		display_request_header_infos(); // for debugging purposes
-		void		extract_body_chunk();
-		void		body_buffer_flushing();
-		void		read_sent_packet(char *buffer);
+		void		extract_body_chunk(const char *body_packet, size_t read_bytes);
+		void		append_chunk_to_body_file(const char *body_chunk, size_t read_bytes);
+		int			read_sent_packet(char *buffer);
 
 	private:
 		// Request Handlers
@@ -108,5 +116,7 @@ class Request
 		// Main Method
 		void	request_parsing();
 };
+
+# include "VirtualServer.hpp"
 
 #endif

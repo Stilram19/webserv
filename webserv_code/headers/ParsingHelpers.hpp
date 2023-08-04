@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ParsingHelpers.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:38:20 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 16:25:04 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 14:57:38 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class ParsingHelpers
 		static char					decode_percent_encoded_character(const char *ptr);
 		static int					skip_crlf(const char *temp);
 		static bool					is_http_method(const std::string &input);
+		static size_t				hexa_to_decimal(const char *hexa_str);
 };
 
 #endif

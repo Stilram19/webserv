@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ParsingHelpers.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:37:48 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/31 10:58:37 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 15:07:28 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,18 @@ char ParsingHelpers::decode_percent_encoded_character(const char *hexa)
 	first = get_hexa_remainder(first);
 	second = get_hexa_remainder(second);
 	return (first * 16 + second);
+}
+
+size_t ParsingHelpers::hexa_to_decimal(const char *hexa_str)
+{
+	size_t ret = 0;
+
+	for (int i = 0; hexa_str[i]; i++)
+	{
+		ret *= 16;
+		ret += get_hexa_remainder(hexa_str[i]);
+	}
+	return (ret);
 }
 
 int ParsingHelpers::skip_crlf(const char *temp)

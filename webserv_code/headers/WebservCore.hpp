@@ -3,17 +3,20 @@
 /*                                                        :::      ::::::::   */
 /*   WebservCore.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/22 17:31:58 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 18:47:06 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 13:43:26 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef WEBSERV_CORE_HPP
 # define WEBSERV_CORE_HPP
 
-# include "GlobalHeader.hpp"
+class VirtualServer;
+class Client;
+
+# include "include.hpp"
 
 // To add in ConfigFileParsing: check if there is more than one server with the same server_name and listen informations
 // !todo fcntl(fd, F_SETFL, O_NONBLOCK);
@@ -58,5 +61,8 @@ class WebservCore
 		// (*) WebservCore's Main Function
 		void	launch_server();
 };
+
+# include "include.hpp"
+# include "Client.hpp"
 
 #endif

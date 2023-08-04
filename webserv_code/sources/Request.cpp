@@ -3,24 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/31 14:25:12 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/03 21:12:56 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Request.hpp"
-
-#define ANSI_COLOR_RESET   "\x1b[0m"
-#define ANSI_COLOR_BLACK   "\x1b[30m"
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_YELLOW  "\x1b[33m"
-#define ANSI_COLOR_BLUE    "\x1b[34m"
-#define ANSI_COLOR_MAGENTA "\x1b[35m"
-#define ANSI_COLOR_CYAN    "\x1b[36m"
-#define ANSI_COLOR_WHITE   "\x1b[37m"
 
 // **************** Constructor & Destructor ****************
 
@@ -33,16 +23,24 @@ Request::Request(int client_socket, std::string &body_file_name, \
     _status = WORKING;
     _error_type = -1;
     _client_socket = client_socket;
+    header_read_bytes = 0;
+    _raw_header_buffer = new RawDataBuffer();
     transfer_encoding_chunked = false;
     content_length = 0;
     body_read_bytes = 0;
+    _consumed_body_bytes_size = 0;
+    _consumed_body_bytes = NULL;
 
     // Mapping the Request handling states to their correspondant methods
     _handlers[HEADER_READING] = &Request::header_reader;
     _handlers[BODY_READING] = &Request::body_reader;
 }
 
-Request::~Request() {}
+Request::~Request()
+{
+    delete _raw_header_buffer;
+    delete _consumed_body_bytes;
+}
 
 // **************** HELPERS ****************
 
@@ -52,7 +50,7 @@ void    Request::random_file_name_generation(std::string &file_name)
     int fd = open("/dev/random", O_RDONLY);
     char buffer[51];
 
-    file_name = "/tmp/";
+    //file_name = "/tmp/";
     for (int i = 0; i < 14; i++)
     {
         read_bytes = read(fd, buffer, 50);
@@ -67,6 +65,15 @@ void    Request::random_file_name_generation(std::string &file_name)
         if (j == read_bytes)
             i--;
     }
+
+    // creating a file with the generated name
+    int fd1 = open(file_name.c_str(), O_CREAT, 0666);
+
+    if (fd1 == -1)
+        throw INTERNAL_SERVER_ERROR;
+    close(fd1);
+
+    // Closing /dev/random fd
     close(fd);
 }
 
@@ -199,14 +206,16 @@ void    Request::request_uri_decoding()
 
 void    Request::extracting_body_consumed_bytes()
 {
-    int start = _header_buffer.find("\r\n\r\n");
+    size_t start = _raw_header_buffer->find("\r\n\r\n");
 
     start += 4;
-    _body_buffer = _header_buffer.substr(start);
-    _header_buffer[start] = '\0';
-
-    // Extracting the raw body chunk from the sent packet
-    extract_body_chunk();
+    _consumed_body_bytes = new RawDataBuffer();
+    // Extracting the body bytes consumed while reading the header
+    _consumed_body_bytes_size = header_read_bytes - start;
+    if (!_consumed_body_bytes_size)
+        return ;
+    *_consumed_body_bytes = _raw_header_buffer->substr(start, _consumed_body_bytes_size);
+    std::cout << "************************* HERE: " << _consumed_body_bytes->c_str() << std::endl;
 }
 
 void		Request::set_the_virtual_server()
@@ -324,49 +333,46 @@ void    Request::display_request_header_infos()
     std::cout << std::endl;
 }
 
-void    Request::read_sent_packet(char *buffer)
+int Request::read_sent_packet(char *buffer)
 {
     int     read_bytes = read(_client_socket, buffer, READ_BUFFER_SIZE);
 
     if (read_bytes <= 0)
         throw CLIENT_DISCONNECT;
-
     buffer[read_bytes] = '\0';
+    return (read_bytes);
 }
 
-void    Request::get_chunk_size()
-{
-    if (chunk_size != -1)
-        return ;
-}
-
-void    Request::extract_body_chunk()
+void    Request::extract_body_chunk(const char *body_packet, size_t read_bytes)
 {
     if (!transfer_encoding_chunked)
     {
         // (*) Content length handler
-
-        body_read_bytes += _body_buffer.length();
+        body_read_bytes += read_bytes;
+        std::cout << "BODY_READ_BYTES: " << body_read_bytes << std::endl;
         if (body_read_bytes > content_length)
             throw REQUEST_ENTITY_TOO_LARGE;
         if (body_read_bytes == content_length)
             _status = NORMAL_TERM;
-        body_buffer_flushing();
+        append_chunk_to_body_file(body_packet, read_bytes);
         return ;
     }
-    // (*) transfer-encoding chunked handler
 
+    // (*) transfer-encoding chunked handler
+    RawDataBuffer chunk = te_chunked_middle_ware.extract_body_chunk(body_packet, read_bytes);
+    std::cout << "||||||READ CHUNK: " << chunk.c_str() << "||||||" << "CHUNK SIZE: " << chunk.length() << std::endl;
+    append_chunk_to_body_file(chunk.c_str(), chunk.length());
 }
 
-void    Request::body_buffer_flushing()
+void    Request::append_chunk_to_body_file(const char *body_chunk, size_t read_bytes)
 {
     int fd = open(_body_file_name.c_str(), O_WRONLY | O_APPEND);
 
     if (fd == -1)
         throw INTERNAL_SERVER_ERROR;
-    write(fd, _body_buffer.c_str(), _body_buffer.length());
-
-    _body_buffer = "";
+    if (write(fd, body_chunk, read_bytes) == -1)
+        throw INTERNAL_SERVER_ERROR;
+    close(fd);
 }
 
 // **************** REQUEST HANDLERS ****************
@@ -374,24 +380,37 @@ void    Request::body_buffer_flushing()
 void    Request::header_reader()
 {
     int     i = 0;
+    size_t  read_bytes;
     char    buffer[READ_BUFFER_SIZE + 1];
 
-    read_sent_packet(buffer);
+    read_bytes = read_sent_packet(buffer);
 
-    //std::cout << "SENT_PACKET: <<<<" << temp << ">>>>" << std::endl;
-
-    if (_header_buffer.empty())
+    if (_raw_header_buffer->empty())
+    {
         i = ParsingHelpers::skip_crlf(buffer);
-    _header_buffer += buffer + i;
+        read_bytes -= i;
+    }
+
+    header_read_bytes += read_bytes;
+    std::cout << "READ_BYTES: (HEADER READING) '" << header_read_bytes << "'" << std::endl;
+
+    _raw_header_buffer->append(buffer + i, read_bytes);
+
+    size_t end = _raw_header_buffer->find("\r\n\r\n");
+
 
     // checking if the header reader is done
-    if (_header_buffer.find("\r\n\r\n") != std::string::npos)
+    if (end != std::string::npos)
     {
+        // Copying the header to the std::string buffer.
+        end += 4;
+        _header_buffer = _raw_header_buffer->substr(0, end).c_str();
+
         // parsing the read header.
         header_parser();
         //  debugging
-        std::cout << ANSI_COLOR_GREEN << "======> HEADER: " << ANSI_COLOR_RESET << std::endl;
-        std::cout << _header_buffer << std::endl;
+        std::cout << ANSI_COLOR_GREEN << "======> HEADER: ||||||" << ANSI_COLOR_RESET << std::endl;
+        std::cout << _header_buffer << "||||||" << std::endl;
         _handling_step = NORMAL_TERM;
     }
 }
@@ -411,15 +430,15 @@ void    Request::header_parser()
         extracting_body_consumed_bytes();
     }
 
+    // destroying the object pointed to by _raw_header_buffer, and nullifying the pointer
+    delete _raw_header_buffer;
+    _raw_header_buffer = NULL;
+
     // Parsing the headers (key : value)
     headers_parsing(curr_index);
 
-    std::cout << "HERE" << std::endl;
-
-
     // Extrating usefull headers values
     important_headers_extraction();
-
 
     // if the method is post
     // ==> the control of the request is transfered to the body reader
@@ -431,8 +450,13 @@ void    Request::header_parser()
     {
         _handling_step = BODY_READING;
 
-        if (!_body_buffer.empty())
-            body_reader();
+        // Checking if we've consumed a body chunk while reading the header
+        std::cout << "CONSUMED BODY BYTES: " << _consumed_body_bytes_size <<  std::endl;
+        if (_consumed_body_bytes_size)
+            extract_body_chunk(_consumed_body_bytes->c_str(), _consumed_body_bytes->length());
+
+        delete _consumed_body_bytes;
+        _consumed_body_bytes = NULL;
         return ;
     }
     _status = NORMAL_TERM;
@@ -442,14 +466,15 @@ void    Request::body_reader()
 {
     // Body reader
 
+    std::cout << "BODY READING CALLED!" << std::endl;
+
     // std::cout << "#BODY READER CALLED#" << std::endl;
     char    buffer[READ_BUFFER_SIZE + 1];
 
-    read_sent_packet(buffer);
-    _body_buffer += buffer;
+    int read_bytes = read_sent_packet(buffer);
 
-    // Extracting the raw body chunk from the sent packet
-    extract_body_chunk();
+    // Extracting the body chunk from the sent packet
+    extract_body_chunk(buffer, read_bytes);
 }
 
 // **************** GETTERS ****************

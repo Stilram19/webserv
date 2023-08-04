@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   include.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 18:21:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/25 19:54:01 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/02 13:50:42 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,5 +33,9 @@
 # include <vector>
 # include <map>
 # include <algorithm>
+
+// My Headers
+# include "MyTypes.hpp"
+# include "ParsingHelpers.hpp"
 
 # endif
