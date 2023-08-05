@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:40:31 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/03 17:19:06 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/05 17:10:20 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,9 +36,6 @@ class Client
 		// to which the client sent a SYN
 		const std::vector<VirtualServer *> &_VServers;
 
-		// ! Configuration (it can be location)
-		VirtualServer *_VServer;
-
 		// Random Name of the file of the request body
 		//! unlink in the response
 		std::string _request_body_file_name;
@@ -66,6 +63,7 @@ class Client
 		bool	is_request_done() const;
 		bool	get_request_status() const;
 		bool	did_client_disconnect() const;
+		int		get_request_error() const;
 
 	public:
 		// Client Handlers

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   TEChunkedMiddleWare.hpp                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/01 10:55:23 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/03 17:31:59 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/05 17:16:52 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,11 +35,14 @@ class TEChunkedMiddleWare
         ~TEChunkedMiddleWare();
 
         // methods
-        RawDataBuffer   get_extracted_chunk();
         void            extract_chunk_size();
         void            extract_chunk();
         void            _extract_body_chunk(const char *body_chunk, size_t len);
         RawDataBuffer   extract_body_chunk(const char *read_bytes, size_t len);
+
+        // getters
+        RawDataBuffer   get_extracted_chunk();
+        bool            is_body_done();
 };
 
 #endif

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   VirtualServer.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/02 13:52:17 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/05 15:00:12 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ class VirtualServer
 		const std::string					&get_server_name() const;
 		const std::string					&get_host_address() const;
 		const std::string					get_error_page(int error_number) const;
-		bool								is_http_method_allowed(const std::string &http_method) const;
+		Location 							*get_correspondant_location(const std::string &) const;
 };
 
 # include "Location.hpp"

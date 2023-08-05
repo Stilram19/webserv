@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/04 15:59:22 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/05 18:50:29 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 // **************** Constructor & Destructor ****************
 
 Request::Request(int client_socket, std::string &body_file_name, \
-    const std::vector<VirtualServer *> &VServers, VirtualServer * &VServer) : _body_file_name(body_file_name), _VServers(VServers), _VServer(VServer)
+    const std::vector<VirtualServer *> &VServers) : _body_file_name(body_file_name), _VServers(VServers)
 {
     // Default values
     _keep_alive = false;
@@ -30,6 +30,7 @@ Request::Request(int client_socket, std::string &body_file_name, \
     body_read_bytes = 0;
     _consumed_body_bytes_size = 0;
     _consumed_body_bytes = NULL;
+    te_chunked_middle_ware = NULL;
 
     // Mapping the Request handling states to their correspondant methods
     _handlers[HEADER_READING] = &Request::header_reader;
@@ -142,9 +143,8 @@ void    Request::headers_parsing(int start)
         }
     }
 
-    // setting the virtual server, if not already set.
-    if (!_VServer)
-        set_the_virtual_server();
+    // setting the config informations (the virtual server and the location)
+    set_config_infos();
 }
 
 int Request::get_http_method(const std::string &method)
@@ -218,7 +218,16 @@ void    Request::extracting_body_consumed_bytes()
     // std::cout << "************************* HERE: " << _consumed_body_bytes->c_str() << std::endl;
 }
 
-void		Request::set_the_virtual_server()
+void		Request::set_config_infos()
+{
+    // Setting the correspondant virtual server
+    set_virtual_server();
+
+    // setting the correspondant location
+    set_location();
+}
+
+void		Request::set_virtual_server()
 {
     std::string virtual_server_name;
 
@@ -242,6 +251,21 @@ void		Request::set_the_virtual_server()
     }
 }
 
+void    Request::set_location()
+{
+    _location = _VServer->get_correspondant_location(_resource_path);
+
+    std::cout << "RESOURCE PATH: |" << _resource_path << "|" << std::endl;
+
+    // checking if the request source path is not found
+    if (_location == NULL)
+        throw NOT_FOUND;
+
+    // checking if the http method is allowed in the location
+    if (!_location->is_http_method_allowed(_http_method))
+        throw METHOD_NOT_ALLOWED;
+}
+
 void    Request::extracting_body_headers()
 {
     std::map<std::string, std::vector<std::string> >::iterator it1, it2;
@@ -261,8 +285,13 @@ void    Request::extracting_body_headers()
         if (it2 != _request_headers.end())
         {
             transfer_encoding_chunked = (it2->second.back() == "chunked");
+
+            // Only chunked is implemented, as transfer-encoding
             if (!transfer_encoding_chunked)
                 throw NOT_IMPLEMENTED;
+
+            // Creating the middle ware object that will handle transfer-encoding chunked.
+            te_chunked_middle_ware = new TEChunkedMiddleWare();
             return ;
         }
         content_length = ParsingHelpers::my_stoi(it1->second.back());
@@ -279,10 +308,6 @@ void    Request::extracting_body_headers()
 
 void    Request::important_headers_extraction()
 {
-    // Cheking if the http method is allowed
-    if (!_VServer->is_http_method_allowed(_http_method))
-        throw METHOD_NOT_ALLOWED;
-
     // Extracting the connection type
     extracting_connection_type();
 
@@ -317,6 +342,14 @@ void    Request::display_request_header_infos()
     std::cout << "query string: " << "'" << _query_string << "'" << std::endl;
     std::cout << "fragment: " << "'" << _fragment << "'" << std::endl;
     std::cout << "==> EXTRACTED HEADERS: " << std::endl;
+
+    std::cout << ANSI_COLOR_YELLOW;
+
+    // !Debugging
+    _VServer->display_server_informations();
+    std::cout << ANSI_COLOR_RESET;
+    std::cout << ANSI_COLOR_GREEN;
+    _location->display_location_informations();
 
     for (std::map<std::string, std::vector<std::string> >::const_iterator it = _request_headers.begin(); it != _request_headers.end(); it++)
     {
@@ -359,8 +392,13 @@ void    Request::extract_body_chunk(const char *body_packet, size_t read_bytes)
     }
 
     // (*) transfer-encoding chunked handler
-    RawDataBuffer chunk = te_chunked_middle_ware.extract_body_chunk(body_packet, read_bytes);
-    //std::cout << "||||||READ CHUNK: " << chunk.c_str() << "||||||" << "CHUNK SIZE: " << chunk.length() << std::endl;
+    RawDataBuffer chunk = te_chunked_middle_ware->extract_body_chunk(body_packet, read_bytes);
+
+    if (te_chunked_middle_ware->is_body_done())
+    {
+        delete te_chunked_middle_ware;
+        _status = NORMAL_TERM;
+    }
     append_chunk_to_body_file(chunk.c_str(), chunk.length());
 }
 
@@ -411,7 +449,7 @@ void    Request::header_reader()
         //  debugging
         std::cout << ANSI_COLOR_GREEN << "======> HEADER: ||||||" << ANSI_COLOR_RESET << std::endl;
         std::cout << _header_buffer << "||||||" << std::endl;
-        _handling_step = NORMAL_TERM;
+        _handling_step = BODY_READING;
     }
 }
 
@@ -465,10 +503,7 @@ void    Request::header_parser()
 void    Request::body_reader()
 {
     // Body reader
-
-    std::cout << "BODY READING CALLED!" << std::endl;
-
-    // std::cout << "#BODY READER CALLED#" << std::endl;
+    std::cout << "BODY READER" << std::endl;
     char    buffer[READ_BUFFER_SIZE + 1];
 
     int read_bytes = read_sent_packet(buffer);
@@ -489,9 +524,19 @@ int Request::get_error_type() const
     return (_error_type);
 }
 
-bool    Request::is_connection_to_be_closed() const
+bool    Request::is_connect_keep_alive() const
 {
-    return (!_keep_alive);
+    return (_keep_alive);
+}
+
+VirtualServer   *Request::get_server() const
+{
+    return (_VServer);
+}
+
+Location    *Request::get_location() const
+{
+    return (_location);
 }
 
 // **************** MAIN FUNCTION ****************

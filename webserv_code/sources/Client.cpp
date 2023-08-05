@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:47:32 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/02 16:01:03 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/05 17:45:24 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 Client::Client(int client_socket, const std::vector<VirtualServer *> &VServers) 
 	: _is_request_done(false), _keep_alive(false), _client_disconnect(false), _request_status(WORKING), \
-    _client_socket(client_socket), _VServers(VServers), _VServer(NULL), _request(NULL) {}
+    _client_socket(client_socket), _VServers(VServers), _request(NULL) {}
 
 Client::~Client()
 {
@@ -52,7 +52,7 @@ bool    Client::did_client_disconnect() const
 
 inline void    Client::new_request()
 {
-    _request = new Request(_client_socket, _request_body_file_name, _VServers, _VServer);
+    _request = new Request(_client_socket, _request_body_file_name, _VServers);
 }
 
 // ******************* SETTERS ********************
@@ -64,6 +64,10 @@ void	Client::request_handling()
     // std::cout << "FINE" << std::endl;
     _request->request_parsing();
     if (_request->get_status() != WORKING)
+    {
+        std::cout << "NOT WORKING: " << _request->get_status() << std::endl;
         _is_request_done = true;
+        _keep_alive = _request->is_connect_keep_alive();
+    }
     _client_disconnect = (_request->get_error_type() == CLIENT_DISCONNECT);
 }

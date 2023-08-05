@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/01 11:22:19 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/04 16:46:17 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/05 18:50:18 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ void    TEChunkedMiddleWare::extract_chunk_size()
     RawDataBuffer chunk_size_str = iner_buffer.substr(0, end);
 
     curr_chunk_size = ParsingHelpers::hexa_to_decimal(chunk_size_str.c_str());
+    std::cout << "CURRENT_CHUNK_SIZE: " << curr_chunk_size << std::endl;
     end_of_body = (curr_chunk_size == 0);
     no_chunk_currently = false;
 
@@ -73,6 +74,15 @@ void TEChunkedMiddleWare::_extract_body_chunk(const char *body_packet, size_t le
     _extract_body_chunk("", 0);
 }
 
+// Main Method
+RawDataBuffer TEChunkedMiddleWare::extract_body_chunk(const char *body_packet, size_t len)
+{
+    std::cout << "EXTRACTING...";
+    _extract_body_chunk(body_packet, len);
+    return (get_extracted_chunk());
+}
+
+// Getters
 RawDataBuffer TEChunkedMiddleWare::get_extracted_chunk()
 {
     RawDataBuffer temp = extracted_chunk;
@@ -82,8 +92,7 @@ RawDataBuffer TEChunkedMiddleWare::get_extracted_chunk()
     return (temp);
 }
 
-RawDataBuffer TEChunkedMiddleWare::extract_body_chunk(const char *body_packet, size_t len)
+bool    TEChunkedMiddleWare::is_body_done()
 {
-    _extract_body_chunk(body_packet, len);
-    return (get_extracted_chunk());
+    return (end_of_body);
 }

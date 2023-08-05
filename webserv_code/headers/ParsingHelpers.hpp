@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ParsingHelpers.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:38:20 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/02 14:57:38 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/05 15:25:10 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ class ParsingHelpers
 		static int					skip_crlf(const char *temp);
 		static bool					is_http_method(const std::string &input);
 		static size_t				hexa_to_decimal(const char *hexa_str);
+		static size_t				first_space(const char *str, size_t pos);
 };
 
 #endif

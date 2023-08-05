@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigFileParser.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/02 13:54:02 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/05 16:24:20 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -371,7 +371,15 @@ int ConfigFileParser::extract_location_infos(VirtualServer *vs, int index)
 
 	index = ParsingHelpers::skip_spaces(_buffer.c_str(), index);
 	key_end = _buffer.find('{', index);
-	loc = vs->new_location(_buffer.substr(index, key_end - index));
+
+	std::string key = _buffer.substr(index, key_end - index);
+	size_t end = ParsingHelpers::first_space(key.c_str(), 0);
+
+	if (key.empty())
+		throw invalid_syntax();
+
+	key = key.substr(0, end);
+	loc = vs->new_location(key);
 	index = key_end + 1;
 	index = extract_location_token_values(vs, loc, index);
 	return (index + 1);

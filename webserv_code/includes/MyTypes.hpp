@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 13:46:58 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/04 15:40:24 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/05 18:58:04 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define MY_TYPES_HPP
 
 # define REQUEST_HEADER_BUFFER_SIZE 8192
-# define READ_BUFFER_SIZE   1048576
+# define READ_BUFFER_SIZE   1024
 
 enum e_request_handling_step
 {
@@ -36,7 +36,8 @@ enum e_request_errors
     METHOD_NOT_ALLOWED = 405,
     REQUEST_ENTITY_TOO_LARGE = 413,
     REQUEST_URI_TOO_LONG = 414,
-    INTERNAL_SERVER_ERROR = 500
+    INTERNAL_SERVER_ERROR = 500,
+    NOT_FOUND = 404
 };
 
 # define ANSI_COLOR_RESET   "\x1b[0m"

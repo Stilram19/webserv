@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/03 13:06:41 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/04 16:38:26 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/05 15:32:36 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,9 +140,9 @@ void    RawDataBuffer::clear()
 
 void    RawDataBuffer::right_shift(size_t new_start)
 {
-    std::cout << "NEW LENGTH: " <<  _len - new_start << std::endl;
-    std::cout << "_LEN: " << _len << std::endl;
-    std::cout << "_NEW_START: " << new_start << std::endl;
+    // std::cout << "NEW LENGTH: " <<  _len - new_start << std::endl;
+    // std::cout << "_LEN: " << _len << std::endl;
+    // std::cout << "_NEW_START: " << new_start << std::endl;
     *this = substr(new_start, _len - new_start);
-    std::cout << "NO SEGFAULT HERE" << std::endl;
+    // std::cout << "NO SEGFAULT HERE" << std::endl;
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ParsingHelpers.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:37:48 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/02 15:07:28 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/05 15:26:25 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,4 +118,11 @@ int ParsingHelpers::skip_crlf(const char *temp)
 bool ParsingHelpers::is_http_method(const std::string &input)
 {
 	return (input == "GET" || input == "POST" || input == "DELETE");
+}
+
+size_t ParsingHelpers::first_space(const char *str, size_t pos)
+{
+	while (!isspace(str[pos]))
+		pos++;
+	return (pos);
 }

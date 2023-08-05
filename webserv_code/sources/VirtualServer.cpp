@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   VirtualServer.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/02 15:12:52 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/05 15:56:48 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,12 +210,28 @@ const std::string	VirtualServer::get_error_page(int error_number) const
 	}
 }
 
-bool	VirtualServer::is_http_method_allowed(const std::string &http_method) const
+Location	*VirtualServer::get_correspondant_location(const std::string &path) const
 {
+	size_t		max_matched_len = 0;
+	Location	*location = NULL;
+
 	for (std::map<std::string, Location *>::const_iterator it = _locations.begin(); it != _locations.end(); it++)
 	{
-		if (it->second->is_http_method_allowed(http_method))
-			return (true);
+		std::string location_root = it->first;
+
+		if (location_root.length() > 1 && location_root[location_root.length() - 1] == '/')
+			location_root = location_root.substr(0, location_root.length() - 1);
+		std::cout << "LOCATION ROOT: |" << location_root << "|" << std::endl;
+
+		if (location_root.length() > path.length())
+			continue ;
+
+		if (!strncmp(location_root.c_str(), path.c_str(), location_root.length())
+			&& location_root.length() > max_matched_len)
+		{
+			location = it->second;
+			max_matched_len = location_root.length();
+		}
 	}
-	return (false);
+	return (location);
 }

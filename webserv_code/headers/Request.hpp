@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/03 14:53:18 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/05 17:18:45 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 # define REQUEST_HPP
 
 # include "TEChunkedMiddleWare.hpp"
+
+class Location;
 
 class VirtualServer;
 
@@ -28,11 +30,12 @@ class Request
 		// Reference to the body_file_name field in the client
 		std::string &_body_file_name;
 
-		// the client server is in this collection
+		// the collection of virtual server targeted by the client
 		const std::vector<VirtualServer *> &_VServers;
 
-		// Reference to the client's Virtual Server
-		VirtualServer * &_VServer;
+		// The virtual server and the location
+		VirtualServer	*_VServer;
+		Location		*_location;
 
 		// set when the client requests the server to keep the connection open for incomming requests
 		bool _keep_alive;
@@ -67,7 +70,7 @@ class Request
 		RawDataBuffer	*_consumed_body_bytes;
 
 		// 'Transfer-Encoding: chunked' handler
-		TEChunkedMiddleWare te_chunked_middle_ware;
+		TEChunkedMiddleWare *te_chunked_middle_ware;
 
 		// key : the handling step | Value : the corresponding handler method
 		std::map<int, PtrToRequestHandler>	_handlers;
@@ -79,7 +82,7 @@ class Request
 
 	public:
 		// Constructor & Destructor
-		Request(int, std::string &, const std::vector<VirtualServer *> &, VirtualServer * &);
+		Request(int, std::string &, const std::vector<VirtualServer *> &);
 		~Request();
 
 	private:
@@ -91,7 +94,9 @@ class Request
 		void		request_uri_parsing();
 		void		request_uri_decoding();
 		void		extracting_body_consumed_bytes();
-		void		set_the_virtual_server();
+		void		set_config_infos();
+		void		set_virtual_server();
+		void		set_location();
 		void		extracting_body_headers();
 		void		important_headers_extraction();
 		void		extracting_connection_type();
@@ -108,9 +113,11 @@ class Request
 
 	public:
 		// Getters
-		bool	get_status() const;
-		int		get_error_type() const;
-		bool	is_connection_to_be_closed() const;
+		bool			get_status() const;
+		int				get_error_type() const;
+		bool			is_connect_keep_alive() const;
+		VirtualServer	*get_server() const;
+		Location		*get_location() const;
 
 	public:
 		// Main Method
