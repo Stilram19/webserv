@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:11:29 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/05 16:24:20 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/06 14:56:27 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,7 @@ void	ConfigFileParser::check_extracted_infos() const
 	{
 		if ((*it)->get_port_number() == -1)
 			throw std::runtime_error("Listen infos must be provided inside every server block!");
+		(*it)->check_location_extracted_infos();
 	}
 
 	for (std::vector<VirtualServer *>::const_iterator it = _VServers.begin(); it != _VServers.end(); it++)

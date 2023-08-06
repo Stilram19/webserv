@@ -16,8 +16,9 @@ server
         cgi php     /Users/obednaou/tests/file
         cgi .py /Users/obednaou/tests/test.cpp
     }
-	location /planet {
-        allowed_methods GET POST                        
+	location /planet 
+    {
+        allowed_methods GET POST
         directory_listing ON
         root /Users/obednaou
         upload_post /Users/obednaou/tests/file
@@ -25,7 +26,8 @@ server
         cgi .php /Users/obednaou/tests/file
     }
 
-		location	/planet/image {
+		location	/planet/image 
+        {
         allowed_methods	GET POST DELETE
         directory_listing OFF
         root /Users/obednaou/tests

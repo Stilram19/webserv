@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/05 18:50:29 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/06 15:55:12 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -539,6 +539,16 @@ Location    *Request::get_location() const
     return (_location);
 }
 
+const std::string 	&Request::get_uri_resource_path() const
+{
+    return (_resource_path);
+}
+
+const std::string	&Request::get_request_method() const
+{
+    return (_http_method);
+}
+
 // **************** MAIN FUNCTION ****************
 
 void    Request::request_parsing()
@@ -550,7 +560,7 @@ void    Request::request_parsing()
 
         (this->*handler)();
     }
-    catch (e_request_errors error_type)
+    catch (e_status_code error_type)
     {
         _status = BAD_TERM;
         _error_type = error_type;
