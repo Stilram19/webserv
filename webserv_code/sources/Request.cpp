@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/06 15:55:12 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/07 12:12:49 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 // **************** Constructor & Destructor ****************
 
 Request::Request(int client_socket, std::string &body_file_name, \
-    const std::vector<VirtualServer *> &VServers) : _body_file_name(body_file_name), _VServers(VServers)
+    const std::vector<VirtualServer *> &VServers) : _body_fd(-1), _body_file_name(body_file_name), _VServers(VServers), _VServer(NULL), _location("", NULL)
 {
     // Default values
     _keep_alive = false;
@@ -68,11 +68,10 @@ void    Request::random_file_name_generation(std::string &file_name)
     }
 
     // creating a file with the generated name
-    int fd1 = open(file_name.c_str(), O_CREAT, 0666);
+    _body_fd = open(file_name.c_str(), O_CREAT, 0666);
 
-    if (fd1 == -1)
+    if (_body_fd == -1)
         throw INTERNAL_SERVER_ERROR;
-    close(fd1);
 
     // Closing /dev/random fd
     close(fd);
@@ -349,7 +348,7 @@ void    Request::display_request_header_infos()
     _VServer->display_server_informations();
     std::cout << ANSI_COLOR_RESET;
     std::cout << ANSI_COLOR_GREEN;
-    _location->display_location_informations();
+    _location.second->display_location_informations();
 
     for (std::map<std::string, std::vector<std::string> >::const_iterator it = _request_headers.begin(); it != _request_headers.end(); it++)
     {
@@ -404,13 +403,17 @@ void    Request::extract_body_chunk(const char *body_packet, size_t read_bytes)
 
 void    Request::append_chunk_to_body_file(const char *body_chunk, size_t read_bytes)
 {
-    int fd = open(_body_file_name.c_str(), O_WRONLY | O_APPEND);
 
-    if (fd == -1)
+    int written_bytes = write(_body_fd, body_chunk, read_bytes);
+
+    if (written_bytes < 0 || (size_t)written_bytes < read_bytes)
         throw INTERNAL_SERVER_ERROR;
-    if (write(fd, body_chunk, read_bytes) == -1)
-        throw INTERNAL_SERVER_ERROR;
-    close(fd);
+}
+
+void    Request::close_body_file()
+{
+    if (_body_fd != -1)
+        close(_body_fd);
 }
 
 // **************** REQUEST HANDLERS ****************

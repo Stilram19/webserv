@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/06 15:54:46 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/07 12:07:33 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,14 +28,15 @@ class Request
 		// (*) Attributes
 
 		// Reference to the body_file_name field in the client
+		int			_body_fd;
 		std::string &_body_file_name;
 
 		// the collection of virtual server targeted by the client
 		const std::vector<VirtualServer *> &_VServers;
 
 		// The virtual server and the location
-		VirtualServer	*_VServer;
-		Location		*_location;
+		VirtualServer								*_VServer;
+		const std::pair<std::string, Location *>	_location;
 
 		// set when the client requests the server to keep the connection open for incomming requests
 		bool _keep_alive;
@@ -87,7 +88,7 @@ class Request
 
 	private:
 		// Helpers
-		static void	random_file_name_generation(std::string &file_name);
+		void		random_file_name_generation(std::string &file_name);
 		int			request_line_parsing();
 		void		headers_parsing(int start);
 		int			get_http_method(const std::string &method);
@@ -104,6 +105,7 @@ class Request
 		void		extract_body_chunk(const char *body_packet, size_t read_bytes);
 		void		append_chunk_to_body_file(const char *body_chunk, size_t read_bytes);
 		int			read_sent_packet(char *buffer);
+		void		close_body_file();
 
 	private:
 		// Request Handlers

@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/06 15:10:30 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/07 12:18:24 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,14 +64,14 @@ class VirtualServer
 
 	public:
 		// Getters
-		unsigned int						get_max_client_body_size() const;
-		int									get_port_number() const;
-		const std::string					&get_port_number_str() const;
-		const std::string					&get_server_name() const;
-		const std::string					&get_host_address() const;
-		const std::string					get_error_page(int error_number) const;
-		Location 							*get_correspondant_location(const std::string &) const;
-		bool								is_there_an_invalid_location() const;
+		unsigned int									get_max_client_body_size() const;
+		int												get_port_number() const;
+		const std::string								&get_port_number_str() const;
+		const std::string								&get_server_name() const;
+		const std::string								&get_host_address() const;
+		const std::string								get_error_page(int error_number) const;
+		const std::pair<const std::string, Location *>	get_correspondant_location(const std::string &) const;
+		bool											is_there_an_invalid_location() const;
 
 };
 

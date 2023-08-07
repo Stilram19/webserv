@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:22:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/06 16:11:50 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/07 09:53:53 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ Response::Response(Request *request) : _request(request)
 
     // Constructing the request resource full path
     const std::string &location_root = _location->get_root_path();
-    const std::string &uri_resource_path = request->get_uri_resource_path();
+    const std::string &uri_resource_path = request->get_uri_resource_path();\
 
     _request_resource_full_path = location_root + uri_resource_path;
 }

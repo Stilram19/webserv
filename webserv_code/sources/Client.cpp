@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:47:32 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/05 17:45:24 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/07 10:33:17 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,8 +65,8 @@ void	Client::request_handling()
     _request->request_parsing();
     if (_request->get_status() != WORKING)
     {
-        std::cout << "NOT WORKING: " << _request->get_status() << std::endl;
         _is_request_done = true;
+        _request->close_body_file();
         _keep_alive = _request->is_connect_keep_alive();
     }
     _client_disconnect = (_request->get_error_type() == CLIENT_DISCONNECT);
