@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 15:11:20 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/06 20:49:47 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/08 18:14:06 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ bool FileHandler::is_directory(const char *path)
     return (S_ISDIR(file_info.st_mode));
 }
 
-bool FileHandler::is_file(const char *path)
+bool FileHandler::is_regular_file(const char *path)
 {
     struct stat file_info;
 
@@ -77,4 +77,37 @@ bool    FileHandler::delete_directory_content(const char *path)
 
     // deleting the directory
     return (rmdir(path));
+}
+
+int FileHandler::random_file_generation(std::string &file_name)
+{
+    int j = 0, read_bytes = 0;
+    int fd = open("/dev/random", O_RDONLY);
+
+    if (fd == -1)
+        return (ERROR);
+    char buffer[51];
+
+    //file_name = "/tmp/";
+    for (int i = 0; i < 14; i++)
+    {
+        read_bytes = read(fd, buffer, 50);
+
+        if (read_bytes == -1)
+            return (ERROR);
+        for (j = 0; j < read_bytes; j++)
+        {
+            if (isalnum(buffer[j]))
+            {
+                file_name += buffer[j];
+                break ;
+            }
+        }
+        if (j == read_bytes)
+            i--;
+    }
+
+    // Closing /dev/random fd
+    close(fd);
+    return (SUCCESS);
 }

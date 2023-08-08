@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/07 12:12:49 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/08 18:20:36 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ Request::Request(int client_socket, std::string &body_file_name, \
     _keep_alive = false;
     _handling_step = HEADER_READING;
     _status = WORKING;
-    _error_type = -1;
+    _error_type = OK;
     _client_socket = client_socket;
     header_read_bytes = 0;
     _raw_header_buffer = new RawDataBuffer();
@@ -44,38 +44,6 @@ Request::~Request()
 }
 
 // **************** HELPERS ****************
-
-void    Request::random_file_name_generation(std::string &file_name)
-{
-    int j = 0, read_bytes = 0;
-    int fd = open("/dev/random", O_RDONLY);
-    char buffer[51];
-
-    //file_name = "/tmp/";
-    for (int i = 0; i < 14; i++)
-    {
-        read_bytes = read(fd, buffer, 50);
-        for (j = 0; j < read_bytes; j++)
-        {
-            if (isalnum(buffer[j]))
-            {
-                file_name += buffer[j];
-                break ;
-            }
-        }
-        if (j == read_bytes)
-            i--;
-    }
-
-    // creating a file with the generated name
-    _body_fd = open(file_name.c_str(), O_CREAT, 0666);
-
-    if (_body_fd == -1)
-        throw INTERNAL_SERVER_ERROR;
-
-    // Closing /dev/random fd
-    close(fd);
-}
 
 int Request::request_line_parsing()
 {
@@ -224,6 +192,9 @@ void		Request::set_config_infos()
 
     // setting the correspondant location
     set_location();
+
+    // deducing the resource path in the file system
+    set_real_resource_path();
 }
 
 void		Request::set_virtual_server()
@@ -252,17 +223,36 @@ void		Request::set_virtual_server()
 
 void    Request::set_location()
 {
-    _location = _VServer->get_correspondant_location(_resource_path);
-
-    std::cout << "RESOURCE PATH: |" << _resource_path << "|" << std::endl;
+    _location.first = _VServer->get_location_key(_resource_path);
+    _location.second = _VServer->get_correspondant_location(_location.first);
 
     // checking if the request source path is not found
-    if (_location == NULL)
+    if (_location.second == NULL)
         throw NOT_FOUND;
 
     // checking if the http method is allowed in the location
-    if (!_location->is_http_method_allowed(_http_method))
+    if (!_location.second->is_http_method_allowed(_http_method))
         throw METHOD_NOT_ALLOWED;
+}
+
+void    Request::set_real_resource_path()
+{
+    size_t      location_key_len = _location.first.length();
+    std::string real_resource_path = _location.second->get_root_path();
+
+    _resource_path = _resource_path.c_str() + location_key_len;
+    if (real_resource_path[real_resource_path.length() - 1] == '/')
+    {
+        if (_resource_path[0] == '/')
+            _resource_path = _resource_path.c_str() + 1;
+        real_resource_path += _resource_path;
+        _resource_path = real_resource_path;
+        return ;
+    }
+    if (_resource_path[0] != '/')
+        real_resource_path += '/';
+    real_resource_path += _resource_path;
+    _resource_path = real_resource_path;
 }
 
 void    Request::extracting_body_headers()
@@ -467,7 +457,15 @@ void    Request::header_parser()
     // ==> Generating a random file name for the body file.
     if (_http_method == "POST")
     {
-        random_file_name_generation(_body_file_name);
+        if (FileHandler::random_file_name_generation(_body_file_name))
+            throw INTERNAL_SERVER_ERROR;
+
+        // creating a file with the generated name
+        _body_fd = open(_body_file_name.c_str(), O_CREAT, 0666);
+
+        if (_body_fd == -1)
+            throw INTERNAL_SERVER_ERROR;
+
         extracting_body_consumed_bytes();
     }
 
@@ -522,7 +520,7 @@ bool Request::get_status() const
     return (_status);
 }
 
-int Request::get_error_type() const
+e_status_code Request::get_error_type() const
 {
     return (_error_type);
 }
@@ -539,10 +537,10 @@ VirtualServer   *Request::get_server() const
 
 Location    *Request::get_location() const
 {
-    return (_location);
+    return (_location.second);
 }
 
-const std::string 	&Request::get_uri_resource_path() const
+const std::string  &Request::get_uri_resource_path() const
 {
     return (_resource_path);
 }

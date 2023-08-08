@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/07 12:39:06 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/08 08:39:25 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,10 +210,10 @@ const std::string	VirtualServer::get_error_page(int error_number) const
 	}
 }
 
-Location	*VirtualServer::get_location_key(const std::string &path) const
+std::string VirtualServer::get_location_key(const std::string &path) const
 {
 	size_t		max_matched_len = 0;
-	Location	*location = NULL;
+	std::string ret;
 
 	for (std::map<std::string, Location *>::const_iterator it = _locations.begin(); it != _locations.end(); it++)
 	{
@@ -221,7 +221,7 @@ Location	*VirtualServer::get_location_key(const std::string &path) const
 
 		if (location_key.length() > 1 && location_key[location_key.length() - 1] == '/')
 			location_key = location_key.substr(0, location_key.length() - 1);
-		std::cout << "LOCATION ROOT: |" << location_key << "|" << std::endl;
+		std::cout << "LOCATION KEY: |" << location_key << "|" << std::endl;
 
 		if (location_key.length() > path.length())
 			continue ;
@@ -229,20 +229,20 @@ Location	*VirtualServer::get_location_key(const std::string &path) const
 		if (!strncmp(location_key.c_str(), path.c_str(), location_key.length())
 			&& location_key.length() > max_matched_len)
 		{
-			location = it->second;
+			ret = it->first;
 			max_matched_len = location_key.length();
 		}
 	}
-	return (location);
+	return (ret);
 }
 
-Location *VirtualServer::get_correspondant_location(const std::string &key)
+Location *VirtualServer::get_correspondant_location(const std::string &location_key)
 {
 	Location *location;
 
 	try
 	{
-		location = _locations.at(key);
+		location = _locations.at(location_key);
 	}
 	catch(const std::exception& e)
 	{

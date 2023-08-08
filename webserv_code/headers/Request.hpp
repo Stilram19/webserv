@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/07 12:07:33 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/08 16:12:06 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,8 @@ class Request
 		const std::vector<VirtualServer *> &_VServers;
 
 		// The virtual server and the location
-		VirtualServer								*_VServer;
-		const std::pair<std::string, Location *>	_location;
+		VirtualServer						*_VServer;
+		std::pair<std::string, Location *>	_location;
 
 		// set when the client requests the server to keep the connection open for incomming requests
 		bool _keep_alive;
@@ -52,8 +52,8 @@ class Request
 		std::map<std::string, std::vector<std::string> > _request_headers;
 
 		// the request handling status (still working or terminated due to a disconnect, bad request ...)
-		int	_status;
-		int	_error_type;
+		int				_status;
+		e_status_code	_error_type;
 
 		// the request handling step (header reading, header parsing, body reading)
 		int	_handling_step;
@@ -98,6 +98,7 @@ class Request
 		void		set_config_infos();
 		void		set_virtual_server();
 		void		set_location();
+		void		set_real_resource_path();
 		void		extracting_body_headers();
 		void		important_headers_extraction();
 		void		extracting_connection_type();
@@ -116,7 +117,7 @@ class Request
 	public:
 		// Getters
 		bool				get_status() const;
-		int					get_error_type() const;
+		e_status_code		get_error_type() const;
 		bool				is_connect_keep_alive() const;
 		VirtualServer		*get_server() const;
 		Location			*get_location() const;

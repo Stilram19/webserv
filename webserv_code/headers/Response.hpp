@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:23:05 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/06 16:08:40 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/08 19:14:34 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,12 +37,25 @@ class Request;
 
 class Response
 {
+    public:
+        // Types
+        typedef void (Response::*PtrToResponseStation)();
+        typedef void (Response::*PtrToMethodHandler)();
     private:
         // Attributes
-            Request         *_request;
-            VirtualServer   *_VServer;
-            Location        *_location;
-            std::string     _request_resource_full_path;
+            int                                         _status;
+            int                                         _temporary_storage_type;
+            int                                         _handling_station;
+            e_status_code                               _status_code;
+            Request                                     *_request;
+            VirtualServer                               *_VServer;
+            Location                                    *_location;
+            std::string                                 _request_method;
+            std::string                                 _request_resource_path;
+            std::string                                 _response_body_file_name;
+            std::string                                 _response_buffer;
+            std::map<int, PtrToResponseStation>         _stations;
+            std::map<std::string, PtrToMethodHandler>   _methods_handlers;
 
         // Useless Constructors & Copy Assignment
             Response();
@@ -61,10 +74,53 @@ class Response
         const std::string   &get_request_method() const;
 
     public:
+        // Getters
+        int get_status() const;
+
+    public:
+        // Response sending
+        void    respond();
+
+    public:
+        // Body Producers
+        void    produce_html_for_status_code();
+        void    produce_html_for_directory_listing();
+        void    return_requested_file();
+        void    regular_file_handler(const std::string &regular_file);
+        void    cgi();
+        
+    public:
+        // Methods Handlers
+        void    get_handler();
+        void    post_handler();
+        void    delete_handler();
+
+    public:
+        // Response stations
+        void    main_processing();
+
+    public:
         // Main Function
-        void    Respond();
+        void    Response_handling();
 };
 
 # include "Request.hpp"
 
 #endif
+
+// Response = Headers + Body
+// Headers = status_code + content_length + content_type + cgi headers if exist + ...
+// status_code = forest of if else
+// content_length = sizeof(Body)
+// content_type = typeof(Body)
+// cgi_headers = the first part of the output of the cgi
+// Body = if (http_method == POST or DELETE) => html file representing the status code
+//        if (http_method == GET)
+//              if (status_code == ERROR) => html file representing the status code
+//              else if (regular file) => the second part of the cgi or the regular file itself
+//              else if (directory) => html file representing the content of the directory
+// http_method = GET | POST | DELETE
+
+
+
+// Response steps: prelimanary processing ==> call the right body producer ==> constructing the header based on the body ==> sending the reponse

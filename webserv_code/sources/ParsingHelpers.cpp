@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:37:48 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/05 15:26:25 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/08 17:22:16 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,4 +125,14 @@ size_t ParsingHelpers::first_space(const char *str, size_t pos)
 	while (!isspace(str[pos]))
 		pos++;
 	return (pos);
+}
+
+std::string	ParsingHelpers::get_file_extension(const std::string &file)
+{
+	size_t		extension_pos = file.find('.');
+	std::string	extension = "";
+
+	if (extension_pos != std::string::npos)
+		extension = file.substr(extension_pos);
+	return (extension);
 }
