@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 17:08:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/08 17:15:56 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/09 15:59:37 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ Location::Location()
 	_setters["directory_listing"] = &Location::set_directory_listing;
 	_setters["redirect"] = &Location::set_redirect;
 	_setters["root"] = &Location::set_root_path;
-	_setters["index"] = &Location::set_index_path;
+	_setters["index"] = &Location::set_index;
 	_setters["upload_post"] = &Location::set_upload_path;
 	_setters["cgi"] = &Location::set_cgi_handler;
 	_setters["allowed_methods"] = &Location::set_allowed_http_method;
@@ -49,7 +49,8 @@ void Location::display_location_informations() const
 	std::cout << "(*) Directory listing: " << directory_listing << std::endl;
 	std::cout << "(*) Redirect: " << get_redirect() << std::endl;
 	std::cout << "(*) Root Path: " << get_root_path() << std::endl;
-	std::cout << "(*) index path: " << get_index_path() << std::endl;
+	for (std::vector<std::string>::const_iterator it = _indices.begin(); it != _indices.end(); it++)
+		std::cout << "(*) index: " << (*it) << std::endl;
 	std::cout << "(*) upload path: " << get_upload_path() << std::endl;
 	std::cout << "(*) allowed methods: ";
 	for (std::vector<std::string>::const_iterator it = _allowed_http_methods.begin(); it != _allowed_http_methods.end(); it++)
@@ -100,12 +101,14 @@ void Location::set_root_path(const std::string &input)
 	int mode = F_OK | R_OK | W_OK;
 	if (access(input.c_str(), mode))
 		throw std::runtime_error("Invalid root path!");
+	if (!FileHandler::is_directory(input.c_str()))
+		throw std::runtime_error("a Location Root is not a directory!");
 	_root_path = input;
 }
 
-void Location::set_index_path(const std::string &input)
+void Location::set_index(const std::string &input)
 {
-	_index_path = input;
+	_indices.push_back(input);
 }
 
 void Location::set_upload_path(const std::string &input)
@@ -114,6 +117,8 @@ void Location::set_upload_path(const std::string &input)
 
 	if (access(input.c_str(), mode))
 		throw std::runtime_error("Invalid upload path!");
+	if (!FileHandler::is_directory(input.c_str()))
+		throw std::runtime_error("the Upload is not a directory!");
 	_upload_path = input;
 }
 
@@ -180,11 +185,6 @@ const std::string	&Location::get_root_path() const
 	return (_root_path);
 }
 
-const std::string	&Location::get_index_path() const
-{
-	return (_index_path);
-}
-
 const std::string	&Location::get_upload_path() const
 {
 	return (_upload_path);
@@ -202,4 +202,22 @@ std::string	Location::get_cgi_handler(const std::string &extension) const
 	{
 		return ("");
 	}
+}
+
+const std::string	&Location::get_index_file(const std::string &root) const
+{
+	for (std::vector<std::string>::const_iterator it = _indices.begin(); it != _indices.end(); it++)
+	{
+		std::string index = (*it);
+
+		// if the index is a relative path, join it with the root to have a full path.
+		if (index[0] != '/')
+			index = root + index;
+
+		// checking if it's a regular file
+		if (FileHandler::is_regular_file(index.c_str()))
+			return (*it);		
+	}
+	// returning an empty string to indicate that no index file was found
+	return ("");
 }

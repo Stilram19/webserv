@@ -6,11 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:23:05 by obednaou          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/08/06 16:08:40 by obednaou         ###   ########.fr       */
-=======
-/*   Updated: 2023/08/08 19:14:34 by obednaou         ###   ########.fr       */
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
+/*   Updated: 2023/08/09 18:52:50 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +24,7 @@
             // (is_there_cgi_handler == true) ==> RUN CGI FOR GET MEtHOD (Status code depends on cgi)
             // false ==> return requested file, 200 OK.
         // (get_directory_listing == ON) ==> list the directory content, 200 OK.
-        // OFF ==> 403 forbidden. 
+        // OFF ==> 403 forbidden.
     // (request_type == FILE)
         // (is_there_cgi_handler == true) ==> RUN CGI FOR GET MEtHOD (Status code depends on cgi)
         // false ==> return requested file, 200 OK.
@@ -41,20 +37,13 @@ class Request;
 
 class Response
 {
-<<<<<<< HEAD
-    private:
-        // Attributes
-            Request         *_request;
-            VirtualServer   *_VServer;
-            Location        *_location;
-            std::string     _request_resource_full_path;
-=======
     public:
         // Types
         typedef void (Response::*PtrToResponseStation)();
         typedef void (Response::*PtrToMethodHandler)();
     private:
         // Attributes
+            bool                                        _is_there_index;
             int                                         _status;
             int                                         _temporary_storage_type;
             int                                         _handling_station;
@@ -65,10 +54,13 @@ class Response
             std::string                                 _request_method;
             std::string                                 _request_resource_path;
             std::string                                 _response_body_file_name;
+            std::string                                 _index_file;
             std::string                                 _response_buffer;
+            std::string                                 _redirection;
+            std::string                                 _request_body_file_path;
             std::map<int, PtrToResponseStation>         _stations;
             std::map<std::string, PtrToMethodHandler>   _methods_handlers;
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
+            std::map<e_status_code, std::string>        _status_code_pages;
 
         // Useless Constructors & Copy Assignment
             Response();
@@ -81,22 +73,20 @@ class Response
 
     private:
         // Helpers
-        bool                is_request_resource_found() const;
         bool                is_there_index_file() const;
         bool                is_directory_listing_on() const;
         const std::string   &get_request_method() const;
+        void                extracting_index_file();
 
     public:
-<<<<<<< HEAD
-        // Main Function
-        void    Respond();
-=======
         // Getters
-        int get_status() const;
+        int     get_status() const;
+        bool    is_there_index() const;
 
     public:
-        // Response sending
+        // Response Construction
         void    respond();
+        void    produce_response_header();
 
     public:
         // Body Producers
@@ -115,18 +105,16 @@ class Response
     public:
         // Response stations
         void    main_processing();
+        void    response_sending();
 
     public:
         // Main Function
         void    Response_handling();
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
 };
 
 # include "Request.hpp"
 
 #endif
-<<<<<<< HEAD
-=======
 
 // Response = Headers + Body
 // Headers = status_code + content_length + content_type + cgi headers if exist + ...
@@ -144,4 +132,3 @@ class Response
 
 
 // Response steps: prelimanary processing ==> call the right body producer ==> constructing the header based on the body ==> sending the reponse
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4

@@ -6,11 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/08/06 15:54:46 by obednaou         ###   ########.fr       */
-=======
-/*   Updated: 2023/08/08 16:12:06 by obednaou         ###   ########.fr       */
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
+/*   Updated: 2023/08/09 18:48:37 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,16 +27,16 @@ class Request
 	private:
 		// (*) Attributes
 
-		// Reference to the body_file_name field in the client
+		// the file descriptor of the body file
 		int			_body_fd;
-		std::string &_body_file_name;
 
 		// the collection of virtual server targeted by the client
 		const std::vector<VirtualServer *> &_VServers;
 
 		// The virtual server and the location
-		VirtualServer						*_VServer;
-		std::pair<std::string, Location *>	_location;
+		VirtualServer	*_VServer;
+		Location		*_location;
+		std::string		_location_key;
 
 		// set when the client requests the server to keep the connection open for incomming requests
 		bool _keep_alive;
@@ -66,6 +62,7 @@ class Request
 		size_t			header_read_bytes;
 		RawDataBuffer	*_raw_header_buffer;
 		std::string		_header_buffer;
+		std::string		_body_file_path;
 
 		// Body related
 		bool			transfer_encoding_chunked;
@@ -87,30 +84,33 @@ class Request
 
 	public:
 		// Constructor & Destructor
-		Request(int, std::string &, const std::vector<VirtualServer *> &);
+		Request(int, const std::vector<VirtualServer *> &);
 		~Request();
 
 	private:
 		// Helpers
-		void		random_file_name_generation(std::string &file_name);
-		int			request_line_parsing();
-		void		headers_parsing(int start);
-		int			get_http_method(const std::string &method);
-		void		request_uri_parsing();
-		void		request_uri_decoding();
-		void		extracting_body_consumed_bytes();
-		void		set_config_infos();
-		void		set_virtual_server();
-		void		set_location();
-		void		set_real_resource_path();
-		void		extracting_body_headers();
-		void		important_headers_extraction();
-		void		extracting_connection_type();
-		void		display_request_header_infos(); // for debugging purposes
-		void		extract_body_chunk(const char *body_packet, size_t read_bytes);
-		void		append_chunk_to_body_file(const char *body_chunk, size_t read_bytes);
-		int			read_sent_packet(char *buffer);
-		void		close_body_file();
+		int		request_line_parsing();
+		void	headers_parsing(int start);
+		int		get_http_method(const std::string &method);
+		void	request_uri_parsing();
+		void	request_uri_decoding();
+		void	extracting_body_consumed_bytes();
+		void	set_config_infos();
+		void	set_virtual_server();
+		void	set_location();
+		void	set_real_resource_path();
+		void	extracting_body_headers();
+		void	important_headers_extraction();
+		void	extracting_connection_type();
+		void	display_request_header_infos(); // for debugging purposes
+		void	extract_body_chunk(const char *body_packet, size_t read_bytes);
+		void	append_chunk_to_body_file(const char *body_chunk, size_t read_bytes);
+		int		read_sent_packet(char *buffer);
+		void	open_body_file();
+
+	public:
+		// Public Helpers
+		void	close_body_file();
 
 	private:
 		// Request Handlers
@@ -121,11 +121,7 @@ class Request
 	public:
 		// Getters
 		bool				get_status() const;
-<<<<<<< HEAD
-		int					get_error_type() const;
-=======
 		e_status_code		get_error_type() const;
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
 		bool				is_connect_keep_alive() const;
 		VirtualServer		*get_server() const;
 		Location			*get_location() const;

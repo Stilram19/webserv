@@ -6,11 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/08/06 15:55:12 by obednaou         ###   ########.fr       */
-=======
-/*   Updated: 2023/08/08 18:20:36 by obednaou         ###   ########.fr       */
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
+/*   Updated: 2023/08/09 18:56:14 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +14,8 @@
 
 // **************** Constructor & Destructor ****************
 
-Request::Request(int client_socket, std::string &body_file_name, \
-    const std::vector<VirtualServer *> &VServers) : _body_fd(-1), _body_file_name(body_file_name), _VServers(VServers), _VServer(NULL), _location("", NULL)
+Request::Request(int client_socket, const std::vector<VirtualServer *> &VServers) \
+    : _body_fd(-1), _VServers(VServers), _VServer(NULL), _location(NULL)
 {
     // Default values
     _keep_alive = false;
@@ -227,22 +223,22 @@ void		Request::set_virtual_server()
 
 void    Request::set_location()
 {
-    _location.first = _VServer->get_location_key(_resource_path);
-    _location.second = _VServer->get_correspondant_location(_location.first);
+    _location_key = _VServer->get_location_key(_resource_path);
+    _location = _VServer->get_correspondant_location(_location_key);
 
     // checking if the request source path is not found
-    if (_location.second == NULL)
+    if (_location == NULL)
         throw NOT_FOUND;
 
     // checking if the http method is allowed in the location
-    if (!_location.second->is_http_method_allowed(_http_method))
+    if (!_location->is_http_method_allowed(_http_method))
         throw METHOD_NOT_ALLOWED;
 }
 
 void    Request::set_real_resource_path()
 {
-    size_t      location_key_len = _location.first.length();
-    std::string real_resource_path = _location.second->get_root_path();
+    size_t      location_key_len = _location_key.length();
+    std::string real_resource_path = _location->get_root_path();
 
     _resource_path = _resource_path.c_str() + location_key_len;
     if (real_resource_path[real_resource_path.length() - 1] == '/')
@@ -342,7 +338,7 @@ void    Request::display_request_header_infos()
     _VServer->display_server_informations();
     std::cout << ANSI_COLOR_RESET;
     std::cout << ANSI_COLOR_GREEN;
-    _location.second->display_location_informations();
+    _location->display_location_informations();
 
     for (std::map<std::string, std::vector<std::string> >::const_iterator it = _request_headers.begin(); it != _request_headers.end(); it++)
     {
@@ -397,10 +393,20 @@ void    Request::extract_body_chunk(const char *body_packet, size_t read_bytes)
 
 void    Request::append_chunk_to_body_file(const char *body_chunk, size_t read_bytes)
 {
-
     int written_bytes = write(_body_fd, body_chunk, read_bytes);
 
     if (written_bytes < 0 || (size_t)written_bytes < read_bytes)
+        throw INTERNAL_SERVER_ERROR;
+}
+
+void    Request::open_body_file()
+{
+    if (FileHandler::random_file_generation(_body_file_path, _location->get_upload_path()))
+        throw INTERNAL_SERVER_ERROR;
+
+    _body_fd = open(body_file_path, O_CREAT | O_RDWR, 0666);
+
+    if (_body_fd == -1)
         throw INTERNAL_SERVER_ERROR;
 }
 
@@ -458,20 +464,8 @@ void    Request::header_parser()
 
     // if the method is post:
     // ==> Extracting the consumed body bytes (while reading the header), if any.
-    // ==> Generating a random file name for the body file.
     if (_http_method == "POST")
-    {
-        if (FileHandler::random_file_name_generation(_body_file_name))
-            throw INTERNAL_SERVER_ERROR;
-
-        // creating a file with the generated name
-        _body_fd = open(_body_file_name.c_str(), O_CREAT, 0666);
-
-        if (_body_fd == -1)
-            throw INTERNAL_SERVER_ERROR;
-
         extracting_body_consumed_bytes();
-    }
 
     // destroying the object pointed to by _raw_header_buffer, and nullifying the pointer
     delete _raw_header_buffer;
@@ -483,17 +477,16 @@ void    Request::header_parser()
     // Extrating usefull headers values
     important_headers_extraction();
 
-    // if the method is post
-    // ==> the control of the request is transfered to the body reader
-    // else
-    // ==> the request is done
+    // ! debugging
     display_request_header_infos();
 
     if (_http_method == "POST")
     {
         _handling_step = BODY_READING;
 
-        // Checking if we've consumed a body chunk while reading the header
+        // open the upload file
+        open_body_file();
+
         std::cout << "CONSUMED BODY BYTES: " << _consumed_body_bytes_size <<  std::endl;
         if (_consumed_body_bytes_size)
             extract_body_chunk(_consumed_body_bytes->c_str(), _consumed_body_bytes->length());
@@ -541,7 +534,7 @@ VirtualServer   *Request::get_server() const
 
 Location    *Request::get_location() const
 {
-    return (_location.second);
+    return (_location);
 }
 
 const std::string  &Request::get_uri_resource_path() const
@@ -562,6 +555,11 @@ const std::string 	&Request::get_uri_resource_path() const
 const std::string	&Request::get_request_method() const
 {
     return (_http_method);
+}
+
+const std::string   &Request::get_body_file_path() const
+{
+    return  (_body_file_path);
 }
 
 // **************** MAIN FUNCTION ****************

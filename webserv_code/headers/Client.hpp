@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:40:31 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/06 09:16:50 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/09 18:11:52 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ class Client
 		const std::vector<VirtualServer *> &_VServers;
 
 		// Random Name of the file of the request body
-		//! unlink in the response
 		std::string _request_body_file_name;
 
 		// Request Handler

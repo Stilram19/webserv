@@ -6,11 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/08/06 15:58:41 by obednaou         ###   ########.fr       */
-=======
-/*   Updated: 2023/08/08 08:39:25 by obednaou         ###   ########.fr       */
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
+/*   Updated: 2023/08/09 18:03:46 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,9 +47,10 @@ Location *VirtualServer::new_location(const std::string &key)
 
 bool VirtualServer::is_error_number(int input) const
 {
-	int error_numbers[7] = {400, 403, 404, 418, 500, 502, 503};
+	int error_numbers[10] = {BAD_REQUEST, NOT_IMPLEMENTED, HTTP_VERSION_NOT_SUPPORTED, REQUEST_HEADER_FIELDS_TOO_LARGE, METHOD_NOT_ALLOWED, REQUEST_ENTITY_TOO_LARGE,
+    	REQUEST_URI_TOO_LONG, INTERNAL_SERVER_ERROR, NOT_FOUND, FORBIDDEN};
 
-	for (int i = 0; i < 7; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		if (input == error_numbers[i])
 			return (true);
@@ -169,6 +166,8 @@ void VirtualServer::set_error_page_path(const std::string &input)
 
 	if (access(error_page.c_str(), F_OK | W_OK | R_OK))
 		throw std::runtime_error("Invalid error page path!");
+	if (!FileHandler::is_regular_file(error_page.c_str()))
+		throw std::runtime_error("Invalid error page path!");
 	// setting the pair into the map
 	_error_pages[error_number] = error_page;
 }
@@ -261,11 +260,8 @@ bool	VirtualServer::is_there_an_invalid_location() const
 
 	for (std::map<std::string, Location *>::const_iterator it = _locations.begin(); it != _locations.end(); it++)
 	{
-<<<<<<< HEAD
-=======
 		if (it->first.empty())
 			return (true);
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
 		curr_location = it->second;
 		if (curr_location->is_http_method_allowed("POST"))
 			if (curr_location->get_upload_path().empty())

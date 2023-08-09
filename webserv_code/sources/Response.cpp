@@ -6,35 +6,20 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:22:49 by obednaou          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/08/06 16:11:50 by obednaou         ###   ########.fr       */
-=======
-/*   Updated: 2023/08/08 19:58:53 by obednaou         ###   ########.fr       */
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
+/*   Updated: 2023/08/09 19:19:53 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Response.hpp"
 
 // Constructor & Destructor
-<<<<<<< HEAD
-Response::Response(Request *request) : _request(request)
-{
-    _VServer = request->get_server();
-    _location = request->get_location();
-
-    // Constructing the request resource full path
-    const std::string &location_root = _location->get_root_path();
-    const std::string &uri_resource_path = request->get_uri_resource_path();
-
-    _request_resource_full_path = location_root + uri_resource_path;
-=======
-Response::Response(Request *request) : _status(WORKING), _temporary_storage_type(FILE), _handling_station(MAIN_PROCESSING), _status_code(OK), _request(request)
+Response::Response(Request *request) : _is_there_index(false), _status(WORKING), _temporary_storage_type(FILE), _handling_station(MAIN_PROCESSING), _status_code(OK), _request(request)
 {
     _VServer = request->get_server();
     _location = request->get_location();
     _request_method = request->get_request_method();
     _request_resource_path = request->get_uri_resource_path();
+    _request_body_file_path = request->get_body_file_path();
 
     // Mapping the response handling states to their corresponding methods
     _stations[MAIN_PROCESSING] = &Response::main_processing;
@@ -43,7 +28,21 @@ Response::Response(Request *request) : _status(WORKING), _temporary_storage_type
     _methods_handlers["GET"] = &Response::get_handler;
     _methods_handlers["POST"] = &Response::post_handler;
     _methods_handlers["DELETE"] = &Response::delete_handler;
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
+
+    // Mapping each status code to its default html page
+    _status_code_pages[OK] = "<html><head><title>200</title></head><body><h1>200 OK</h1></body></html>";
+    _status_code_pages[CREATED] = "<html><head><title>201</title></head><body><h1>201 CREATED</h1></body></html>";
+    _status_code_pages[MOVED_PERMANENTLY] = "<html><head><title>301</title></head><body><h1>301 moved permanently</h1></body></html>";
+    _status_code_pages[BAD_REQUEST] = "<html><head><title>400</title></head><body><h1>400 bad request</h1></body></html>";
+    _status_code_pages[NOT_IMPLEMENTED] = "<html><head><title>501</title></head><body><h1>501 not implemented</h1></body></html>";
+    _status_code_pages[HTTP_VERSION_NOT_SUPPORTED] = "<html><head><title>505</title></head><body><h1>505 http version not supported</h1></body></html>";
+    _status_code_pages[REQUEST_HEADER_FIELDS_TOO_LARGE] = "<html><head><title>431</title></head><body><h1>431 request header fields too large</h1></body></html>";
+    _status_code_pages[METHOD_NOT_ALLOWED] = "<html><head><title>405</title></head><body><h1>405 Method not allowed</h1></body></html>";
+    _status_code_pages[REQUEST_ENTITY_TOO_LARGE] = "<html><head><title>413</title></head><body><h1>413 request entity too large</h1></body></html>";
+    _status_code_pages[REQUEST_URI_TOO_LONG] = "<html><head><title>414</title></head><body><h1>414 request uri too long</h1></body></html>";
+    _status_code_pages[INTERNAL_SERVER_ERROR] = "<html><head><title>500</title></head><body><h1>500 internal server error</h1></body></html>";
+    _status_code_pages[NOT_FOUND] = "<html><head><title>404</title></head><body><h1>404 not found</h1></body></html>";
+    _status_code_pages[FORBIDDEN] = "<html><head><title>403</title></head><body><h1>403 forbidden</h1></body></html>";
 }
 
 Response::~Response()
@@ -51,32 +50,7 @@ Response::~Response()
 
 }
 
-<<<<<<< HEAD
-// Helpers
-bool    Response::is_request_resource_found() const
-{
-    if (FileHandler::is_file(_request_resource_full_path.c_str()))
-        return (true);
-    if (FileHandler::is_directory(_request_resource_full_path.c_str()))
-=======
 // ******************* HELPERS *******************
-
-bool    Response::is_request_resource_found() const
-{
-    if (FileHandler::is_regular_file(_request_resource_path.c_str()))
-        return (true);
-    if (FileHandler::is_directory(_request_resource_path.c_str()))
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
-        return (true);
-    return (false);
-}
-
-bool    Response::is_there_index_file() const
-{
-    const std::string &index_file = _location->get_index_path();
-
-    return (!index_file.empty());
-}
 
 bool    Response::is_directory_listing_on() const
 {
@@ -88,18 +62,26 @@ const std::string   &Response::get_request_method() const
     return (_request->get_request_method());
 }
 
-<<<<<<< HEAD
-// Main Function
-void    Response::Respond()
+void    Response::extracting_index_file()
 {
-    // Checking if the request exited with an error status code
-    // if the request resource not found ==> 
-=======
+    _index_file = _location->get_index_file(_request_resource_path);
+
+    // return if no index file was found
+    if (_index_file.empty())
+        return ;
+    _is_there_index = true;
+}
+
 // ********************* GETTERS *********************
 
 int Response::get_status() const
 {
     return (_status);
+}
+
+bool    Response::is_there_index() const
+{
+    return (_is_there_index);
 }
 
 // ********************* RESPONSE SENDING *********************
@@ -115,12 +97,52 @@ void    Response::respond()
 
 void    Response::produce_response_header()
 {
+    std::string html_file_name = _location->get_error_page();
+
+    if (!html_file_name.empty())
+    {
+        // opening the html file
+        std::string     buffer;
+        std::ifstream   input_stream(html_file_name.c_str());
+
+        if (!input_stream.is_open())
+            throw INTERNAL_SERVER_ERROR;
+        
+        while (std::getline(input_stream, buffer))
+            _body_buffer += buffer;
+
+        // closing
+        input_stream.close();
+
+        // the body is all there
+        respond();
+        return ;
+    }
+
+    // if the status code doesn't represent an error
+    // or no error page extracted from the config file
+    // ==> Using the default
+
+    // this try catch is just for debugging.
+    try
+    {
+        _body_buffer = _status_code_pages.at(_status_code);
+
+        // the body is all there
+        respond();
+    }
+    catch (std::exception &e)
+    {
+        std::cerr << "***********NO DEFAULT PAGE FOR THIS STATUS CODE***********" << std::endl;
+    }
 }
 
 // ********************* BODY PRODUCERS *********************
 
 void    Response::produce_html_for_status_code()
 {
+    std::string html_file_name;
+
     
 }
 
@@ -131,12 +153,12 @@ void    Response::produce_html_for_directory_listing()
     _response_buffer += "</h1>\n<ul>\n";
 
     // Opening the directory and pointing to the stream object, which is pointing on the first entry.
-    DIR *dir_stream = opendir(path);
+    DIR *dir_stream = opendir(_request_resource_path.c_str());
 
     if (dir_stream == NULL)
     {
         std::cerr << "Can't open directory!" << std::endl;
-        return (false);
+        throw INTERNAL_SERVER_ERROR;
     }
 
     // Iterating through the entries
@@ -159,6 +181,9 @@ void    Response::produce_html_for_directory_listing()
 
     // Closing the open file (freeing the resources allocated for the stream object)
     closedir(dir_stream);
+
+    // the body is all there
+    respond();
 }
 
 void    Response::regular_file_handler(const std::string &regular_file)
@@ -181,7 +206,6 @@ void    Response::regular_file_handler(const std::string &regular_file)
 
 void    Response::cgi()
 {
-
 }
 
 // ********************* METHODS HANDLER *********************
@@ -198,10 +222,10 @@ void    Response::get_handler()
 
     // (*) handling directory
 
-    // giving the priority to the index file, anyway.
-    if (is_there_index_file())
+    // giving the priority to the index file.
+    if (is_there_index())
     {
-        regular_file_handler(_location->get_index_path());
+        regular_file_handler(_index_file);
         return ;
     }
 
@@ -216,7 +240,11 @@ void    Response::get_handler()
 
 void    Response::post_handler()
 {
-
+    if (FileHandler::is_directory(_request_resource_path.c_str()))
+    {
+        if (!is_there_index())
+            throw FORBIDDEN;
+    }
 }
 
 void    Response::delete_handler()
@@ -232,14 +260,40 @@ void    Response::main_processing()
     if (_request->get_status() == BAD_TERM)
         throw _request->get_error_type();
 
-    // Checking if the request resource is found in the filesystem
-    if (!is_request_resource_found())
-        throw NOT_FOUND;
+    // Checking if the location has a redirection
+    _redirection = _location->get_redirect();
+
+    if (!_redirection.empty())
+    {
+        _status = MOVED_PERMANENTLY;
+        produce_html_for_status_code();
+        return ;
+    }
+
+    // preliminary tests if the resource is a directory
+    if (FileHandler::is_directory(_request_resource_path.c_str()))
+    {
+        // Redirecting with a '/' terminated directory path.
+        if (_request_resource_path.back() != '/')
+        {
+            _redirection = _request_resource_path + '/';
+            _status = MOVED_PERMANENTLY;
+            produce_html_for_status_code();
+            return ;
+        }
+        // extracting the right index file, if any
+        extracting_index_file();
+    }
 
     // Calling the appropriate request method handler
     PtrToMethodHandler method_handler = _methods_handlers[_request_method];
 
     (this->*method_handler)();
+}
+
+void    Response::response_sending()
+{
+
 }
 
 // ********************* MAIN FUNCTION *********************
@@ -248,19 +302,20 @@ void    Response::Response_handling()
 {
     try
     {
-        // the only two exceptions that can be thrown: CLIENT_DISCONNECT | INTERNAL_SERVER_ERROR
-        // Calling the current response handler
+        // Calling the current response station method
         PtrToResponseStation station = _stations[_handling_station];
 
         (this->*station)();
     }
     catch (e_status_code error_type)
     {
-        if (!error_type)
+        if (error_type == CLIENT_DISCONNECT)
+        {
             _status = BAD_TERM;
+            return ;
+        }
         _temporary_storage_type = RAM_BUFFER;
         _status_code = error_type;
         produce_html_for_status_code();
     }
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
 }

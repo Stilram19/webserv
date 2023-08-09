@@ -6,11 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/08/06 15:10:30 by obednaou         ###   ########.fr       */
-=======
-/*   Updated: 2023/08/08 08:39:01 by obednaou         ###   ########.fr       */
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
+/*   Updated: 2023/08/09 11:50:06 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +45,6 @@ class VirtualServer
 		// Public Helpers
 		Location	*new_location(const std::string &key);
 		void		display_server_informations() const;
-		void		check_location_extracted_infos() const;
 
 	private:
 		// Private Helpers
@@ -68,16 +63,6 @@ class VirtualServer
 
 	public:
 		// Getters
-<<<<<<< HEAD
-		unsigned int						get_max_client_body_size() const;
-		int									get_port_number() const;
-		const std::string					&get_port_number_str() const;
-		const std::string					&get_server_name() const;
-		const std::string					&get_host_address() const;
-		const std::string					get_error_page(int error_number) const;
-		Location 							*get_correspondant_location(const std::string &) const;
-		bool								is_there_an_invalid_location() const;
-=======
 		unsigned int		get_max_client_body_size() const;
 		int					get_port_number() const;
 		const std::string	&get_port_number_str() const;
@@ -87,7 +72,6 @@ class VirtualServer
 		std::string			get_location_key(const std::string &path) const;
 		Location			*get_correspondant_location(const std::string &location_key);
 		bool				is_there_an_invalid_location() const;
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
 
 };
 

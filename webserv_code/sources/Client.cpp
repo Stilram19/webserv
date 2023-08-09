@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:47:32 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/07 10:33:17 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/09 11:06:15 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ bool    Client::did_client_disconnect() const
 
 inline void    Client::new_request()
 {
-    _request = new Request(_client_socket, _request_body_file_name, _VServers);
+    _request = new Request(_client_socket, _VServers);
 }
 
 // ******************* SETTERS ********************

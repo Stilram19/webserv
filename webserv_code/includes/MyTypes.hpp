@@ -6,11 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 13:46:58 by codespace         #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/08/06 19:12:19 by obednaou         ###   ########.fr       */
-=======
-/*   Updated: 2023/08/08 19:12:56 by obednaou         ###   ########.fr       */
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
+/*   Updated: 2023/08/09 10:19:29 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +24,6 @@ enum e_request_handling_step
     HEADER_READING = 0, BODY_READING
 };
 
-<<<<<<< HEAD
-enum e_status_code
-=======
 // Stations where the response might call the handler more than one time
 enum e_response_handling_stations
 {
@@ -38,7 +31,6 @@ enum e_response_handling_stations
 };
 
 enum e_status
->>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
 {
     WORKING = 0, NORMAL_TERM, BAD_TERM
 };
