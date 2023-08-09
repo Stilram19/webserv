@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 13:46:58 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/09 10:19:29 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/09 22:07:58 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 
 # define SUCCESS 0
 # define ERROR 1
+# define PREMISSION_DENIED 2
 
 enum e_request_handling_step
 {
@@ -55,7 +56,9 @@ enum e_status_code
     REQUEST_URI_TOO_LONG = 414,
     INTERNAL_SERVER_ERROR = 500,
     NOT_FOUND = 404,
-    FORBIDDEN = 403
+    FORBIDDEN = 403,
+    CONFLICT = 409,
+    NO_CONTENT = 204
 };
 
 # define ANSI_COLOR_RESET   "\x1b[0m"

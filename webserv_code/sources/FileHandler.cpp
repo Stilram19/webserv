@@ -6,13 +6,13 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 15:11:20 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 18:42:02 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/09 22:06:39 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "FileHandle.hpp"
 
-bool FileHandler::is_directory(const char *path)
+bool    FileHandler::is_directory(const char *path)
 {
     struct stat file_info;
 
@@ -21,7 +21,7 @@ bool FileHandler::is_directory(const char *path)
     return (S_ISDIR(file_info.st_mode));
 }
 
-bool FileHandler::is_regular_file(const char *path)
+bool    FileHandler::is_regular_file(const char *path)
 {
     struct stat file_info;
 
@@ -30,13 +30,16 @@ bool FileHandler::is_regular_file(const char *path)
     return (S_ISREG(file_info.st_mode));
 }
 
-void FileHandler::delete_file(const char *path)
+int     FileHandler::delete_file(const char *path)
 {
+    if (access(path, W_OK))
+        return (PERMISSION_DENIED);
     if (unlink(path))
-        std::cerr << "unlink filed!" << std::endl;
+        return (ERROR);
+    return (SUCCESS);
 }
 
-bool    FileHandler::delete_directory_content(const char *path)
+int    FileHandler::delete_directory_content(const char *path)
 {
     // Opening the directory and pointing to the stream object, which is pointing on the first entry.
     DIR *dir_stream = opendir(path);
@@ -44,8 +47,13 @@ bool    FileHandler::delete_directory_content(const char *path)
     if (dir_stream == NULL)
     {
         std::cerr << "Can't open directory!" << std::endl;
-        return (false);
+        return (ERROR);
     }
+
+    // Checking directory permissions
+
+    if (access(path, R_OK | W_OK))
+        return (PERMISSION_DENIED);
 
     // Iterating through the entries
     struct dirent *entry;
@@ -61,12 +69,13 @@ bool    FileHandler::delete_directory_content(const char *path)
         entry_full_name += entry->d_name;
         if (is_directory(entry_full_name.c_str()))
         {
-            if (delete_directory_content(entry_full_name.c_str()))
+            int delete_status = delete_directory_content(entry_full_name.c_str());
+
+            if (delete_status)
             {
                 closedir(dir_stream);
-                return (ERROR);
+                return (delete_status);
             }
-            rmdir(entry_full_name.c_str());
         }
         else if (is_file(entry_full_name.c_str()))
             unlink(entry_full_name.c_str());

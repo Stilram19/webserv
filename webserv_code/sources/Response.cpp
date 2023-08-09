@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:22:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 19:19:53 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/09 22:14:53 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,8 @@ Response::Response(Request *request) : _is_there_index(false), _status(WORKING),
     _status_code_pages[INTERNAL_SERVER_ERROR] = "<html><head><title>500</title></head><body><h1>500 internal server error</h1></body></html>";
     _status_code_pages[NOT_FOUND] = "<html><head><title>404</title></head><body><h1>404 not found</h1></body></html>";
     _status_code_pages[FORBIDDEN] = "<html><head><title>403</title></head><body><h1>403 forbidden</h1></body></html>";
+    _status_code_pages[CONFLICT] = "<html><head><title>409</title></head><body><h1>409 conflict</h1></body></html>";
+    _status_code_pages[NO_CONTENT] = "<html><head><title>204</title></head><body><h1>204 no content</h1></body></html>";
 }
 
 Response::~Response()
@@ -97,6 +99,13 @@ void    Response::respond()
 
 void    Response::produce_response_header()
 {
+
+}
+
+// ********************* BODY PRODUCERS *********************
+
+void    Response::produce_html_for_status_code()
+{
     std::string html_file_name = _location->get_error_page();
 
     if (!html_file_name.empty())
@@ -135,15 +144,6 @@ void    Response::produce_response_header()
     {
         std::cerr << "***********NO DEFAULT PAGE FOR THIS STATUS CODE***********" << std::endl;
     }
-}
-
-// ********************* BODY PRODUCERS *********************
-
-void    Response::produce_html_for_status_code()
-{
-    std::string html_file_name;
-
-    
 }
 
 void    Response::produce_html_for_directory_listing()
@@ -200,6 +200,11 @@ void    Response::regular_file_handler(const std::string &regular_file)
     }
 
     // if no cgi handler exists, the request resource file content is returned.
+    if (_request_method == "POST")
+        throw FORBIDDEN;
+
+    // 200 OK for GET
+    _status_code = OK;
     _response_body_file_name = _request_resource_path;
     respond();
 }
@@ -212,15 +217,15 @@ void    Response::cgi()
 
 void    Response::get_handler()
 {
-    // (*) handling regular file
+    // (*) regular file handling
 
     if (FileHandler::is_regular_file(_request_resource_path.c_str()))
     {
-        regular_file_handler(_request_resource_path.c_str());
+        regular_file_handler(_request_resource_path);
         return ;
     }
 
-    // (*) handling directory
+    // (*) directory handling
 
     // giving the priority to the index file.
     if (is_there_index())
@@ -240,16 +245,52 @@ void    Response::get_handler()
 
 void    Response::post_handler()
 {
-    if (FileHandler::is_directory(_request_resource_path.c_str()))
+    // (*) regular file handling
+
+    if (FileHandler::is_regular_file(_request_resource_path.c_str()))
     {
-        if (!is_there_index())
-            throw FORBIDDEN;
+        regular_file_handler(_request_resource_path);
+        return ;
     }
+
+    // (*) directory handling
+
+    if (!is_there_index())
+        throw FORBIDDEN;
+
+    regular_file_handler(_index_file);
 }
 
 void    Response::delete_handler()
 {
+    // (*) regular file handling
 
+    int delete_status;
+
+    if (FileHandler::is_regular_file(_request_resource_path.c_str()))
+    {
+        delete_status = FileHandler::delete_file(_request_resource_path.c_str());
+        if (delete_status)
+        {
+            if (delete_status == PERMISSION_DENIED)
+                throw FORBIDDEN;
+            throw INTERNAL_SERVER_ERROR;
+        }
+        return ;
+    }
+
+    // (*) Directory handling
+
+    delete_status = FileHandler::delete_directory(_request_resource_path.c_str());
+
+    if (delete_status)
+    {
+        if (delete_status == PERMISSION_DENIED)
+            throw FORBIDDEN;
+        throw INTERNAL_SERVER_ERROR;
+    }
+    _status_code = NO_CONTENT;
+    produce_html_for_status_code();
 }
 
 // ********************* RESPONSE STATIONS *********************
@@ -278,6 +319,8 @@ void    Response::main_processing()
         {
             _redirection = _request_resource_path + '/';
             _status = MOVED_PERMANENTLY;
+            if (_http_method == "DELETE")
+                _status = CONFLICT;
             produce_html_for_status_code();
             return ;
         }

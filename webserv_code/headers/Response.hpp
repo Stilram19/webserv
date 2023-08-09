@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:23:05 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 18:52:50 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/09 22:11:45 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,33 +43,33 @@ class Response
         typedef void (Response::*PtrToMethodHandler)();
     private:
         // Attributes
-            bool                                        _is_there_index;
-            int                                         _status;
-            int                                         _temporary_storage_type;
-            int                                         _handling_station;
-            e_status_code                               _status_code;
-            Request                                     *_request;
-            VirtualServer                               *_VServer;
-            Location                                    *_location;
-            std::string                                 _request_method;
-            std::string                                 _request_resource_path;
-            std::string                                 _response_body_file_name;
-            std::string                                 _index_file;
-            std::string                                 _response_buffer;
-            std::string                                 _redirection;
-            std::string                                 _request_body_file_path;
-            std::map<int, PtrToResponseStation>         _stations;
-            std::map<std::string, PtrToMethodHandler>   _methods_handlers;
-            std::map<e_status_code, std::string>        _status_code_pages;
+        bool                                        _is_there_index;
+        int                                         _status;
+        int                                         _temporary_storage_type;
+        int                                         _handling_station;
+        e_status_code                               _status_code;
+        Request                                     *_request;
+        VirtualServer                               *_VServer;
+        Location                                    *_location;
+        std::string                                 _request_method;
+        std::string                                 _request_resource_path;
+        std::string                                 _response_body_file_name;
+        std::string                                 _index_file;
+        std::string                                 _response_buffer;
+        std::string                                 _redirection;
+        std::string                                 _request_body_file_path;
+        std::map<int, PtrToResponseStation>         _stations;
+        std::map<std::string, PtrToMethodHandler>   _methods_handlers;
+        std::map<e_status_code, std::string>        _status_code_pages;
 
         // Useless Constructors & Copy Assignment
-            Response();
-            Response(const Response &);
-            Response &operator=(const Response &);
+        Response();
+        Response(const Response &);
+        Response &operator=(const Response &);
     public:
         // Constructor & Destructor
-            Response(Request *request);
-            ~Response();
+        Response(Request *request);
+        ~Response();
 
     private:
         // Helpers
@@ -78,17 +78,17 @@ class Response
         const std::string   &get_request_method() const;
         void                extracting_index_file();
 
-    public:
+    private:
         // Getters
         int     get_status() const;
         bool    is_there_index() const;
 
-    public:
+    private:
         // Response Construction
         void    respond();
         void    produce_response_header();
 
-    public:
+    private:
         // Body Producers
         void    produce_html_for_status_code();
         void    produce_html_for_directory_listing();
@@ -96,13 +96,13 @@ class Response
         void    regular_file_handler(const std::string &regular_file);
         void    cgi();
         
-    public:
+    private:
         // Methods Handlers
         void    get_handler();
         void    post_handler();
         void    delete_handler();
 
-    public:
+    private:
         // Response stations
         void    main_processing();
         void    response_sending();
