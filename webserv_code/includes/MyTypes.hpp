@@ -6,7 +6,11 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 13:46:58 by codespace         #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2023/08/06 19:12:19 by obednaou         ###   ########.fr       */
+=======
+/*   Updated: 2023/08/08 19:12:56 by obednaou         ###   ########.fr       */
+>>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,14 +28,32 @@ enum e_request_handling_step
     HEADER_READING = 0, BODY_READING
 };
 
+<<<<<<< HEAD
 enum e_status_code
+=======
+// Stations where the response might call the handler more than one time
+enum e_response_handling_stations
+{
+    MAIN_PROCESSING = 0, STORING_REQUEST_BODY, WAITING_FOR_CGI, RESPONSE_SENDING
+};
+
+enum e_status
+>>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
 {
     WORKING = 0, NORMAL_TERM, BAD_TERM
 };
 
-enum e_request_errors
+enum e_temporary_storage_type
 {
-    CLIENT_DISCONNECT = 0,
+    RAM_BUFFER = 0, FILE
+};
+
+enum e_status_code
+{
+    CLIENT_DISCONNECT = 0, // this is not an http status code (exception)
+    OK = 200,
+    CREATED = 201,
+    MOVED_PERMANENTLY = 301,
     BAD_REQUEST = 400,
     NOT_IMPLEMENTED = 501,
     HTTP_VERSION_NOT_SUPPORTED = 505,
@@ -40,7 +62,8 @@ enum e_request_errors
     REQUEST_ENTITY_TOO_LARGE = 413,
     REQUEST_URI_TOO_LONG = 414,
     INTERNAL_SERVER_ERROR = 500,
-    NOT_FOUND = 404
+    NOT_FOUND = 404,
+    FORBIDDEN = 403
 };
 
 # define ANSI_COLOR_RESET   "\x1b[0m"

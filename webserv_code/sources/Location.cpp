@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 17:08:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/07/30 16:35:06 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/08 17:15:56 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ Location::Location()
 
 	// Setters
 	_setters["directory_listing"] = &Location::set_directory_listing;
-	_setters["redirect"] = &Location::set_redirect_path;
+	_setters["redirect"] = &Location::set_redirect;
 	_setters["root"] = &Location::set_root_path;
 	_setters["index"] = &Location::set_index_path;
 	_setters["upload_post"] = &Location::set_upload_path;
@@ -47,7 +47,7 @@ void Location::display_location_informations() const
 		directory_listing = "ON";
 	std::cout << "********************************************" << std::endl;
 	std::cout << "(*) Directory listing: " << directory_listing << std::endl;
-	std::cout << "(*) Redirect path: " << get_redirect_path() << std::endl;
+	std::cout << "(*) Redirect: " << get_redirect() << std::endl;
 	std::cout << "(*) Root Path: " << get_root_path() << std::endl;
 	std::cout << "(*) index path: " << get_index_path() << std::endl;
 	std::cout << "(*) upload path: " << get_upload_path() << std::endl;
@@ -90,13 +90,9 @@ void Location::set_directory_listing(const std::string &input)
 		_directory_listing = false;
 }
 
-void Location::set_redirect_path(const std::string &input)
+void Location::set_redirect(const std::string &input)
 {
-	int mode = F_OK | R_OK | W_OK;
-
-	if (access(input.c_str(), mode)) // check read permission
-		throw std::runtime_error("Invalid redirection path!");
-	_redirect_path = input;
+	_redirect = input;
 }
 
 void Location::set_root_path(const std::string &input)
@@ -174,9 +170,9 @@ bool	Location::is_http_method_allowed(const std::string &_http_method) const
 	return (it != _allowed_http_methods.end());
 }
 
-const std::string	&Location::get_redirect_path() const
+const std::string	&Location::get_redirect() const
 {
-	return (_redirect_path);
+	return (_redirect);
 }
 
 const std::string	&Location::get_root_path() const
@@ -194,7 +190,7 @@ const std::string	&Location::get_upload_path() const
 	return (_upload_path);
 }
 
-const std::string	Location::get_cgi_handler(const std::string &extension) const
+std::string	Location::get_cgi_handler(const std::string &extension) const
 {
 	try
 	{

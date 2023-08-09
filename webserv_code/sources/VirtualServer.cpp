@@ -6,7 +6,11 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2023/08/06 15:58:41 by obednaou         ###   ########.fr       */
+=======
+/*   Updated: 2023/08/08 08:39:25 by obednaou         ###   ########.fr       */
+>>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,28 +214,43 @@ const std::string	VirtualServer::get_error_page(int error_number) const
 	}
 }
 
-Location	*VirtualServer::get_correspondant_location(const std::string &path) const
+std::string VirtualServer::get_location_key(const std::string &path) const
 {
 	size_t		max_matched_len = 0;
-	Location	*location = NULL;
+	std::string ret;
 
 	for (std::map<std::string, Location *>::const_iterator it = _locations.begin(); it != _locations.end(); it++)
 	{
-		std::string location_root = it->first;
+		std::string location_key = it->first;
 
-		if (location_root.length() > 1 && location_root[location_root.length() - 1] == '/')
-			location_root = location_root.substr(0, location_root.length() - 1);
-		std::cout << "LOCATION ROOT: |" << location_root << "|" << std::endl;
+		if (location_key.length() > 1 && location_key[location_key.length() - 1] == '/')
+			location_key = location_key.substr(0, location_key.length() - 1);
+		std::cout << "LOCATION KEY: |" << location_key << "|" << std::endl;
 
-		if (location_root.length() > path.length())
+		if (location_key.length() > path.length())
 			continue ;
 
-		if (!strncmp(location_root.c_str(), path.c_str(), location_root.length())
-			&& location_root.length() > max_matched_len)
+		if (!strncmp(location_key.c_str(), path.c_str(), location_key.length())
+			&& location_key.length() > max_matched_len)
 		{
-			location = it->second;
-			max_matched_len = location_root.length();
+			ret = it->first;
+			max_matched_len = location_key.length();
 		}
+	}
+	return (ret);
+}
+
+Location *VirtualServer::get_correspondant_location(const std::string &location_key)
+{
+	Location *location;
+
+	try
+	{
+		location = _locations.at(location_key);
+	}
+	catch(const std::exception& e)
+	{
+		location = NULL;
 	}
 	return (location);
 }
@@ -242,6 +261,11 @@ bool	VirtualServer::is_there_an_invalid_location() const
 
 	for (std::map<std::string, Location *>::const_iterator it = _locations.begin(); it != _locations.end(); it++)
 	{
+<<<<<<< HEAD
+=======
+		if (it->first.empty())
+			return (true);
+>>>>>>> c3dda2ce8d1438e118cfb560dd70e7e11bb048a4
 		curr_location = it->second;
 		if (curr_location->is_http_method_allowed("POST"))
 			if (curr_location->get_upload_path().empty())
