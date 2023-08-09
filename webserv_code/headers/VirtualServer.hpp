@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:47 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/05 15:00:12 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/06 15:10:30 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,8 @@ class VirtualServer
 		// Public Helpers
 		Location	*new_location(const std::string &key);
 		void		display_server_informations() const;
+		void		check_location_extracted_infos() const;
+
 	private:
 		// Private Helpers
 		bool	is_error_number(int input) const;
@@ -69,6 +71,8 @@ class VirtualServer
 		const std::string					&get_host_address() const;
 		const std::string					get_error_page(int error_number) const;
 		Location 							*get_correspondant_location(const std::string &) const;
+		bool								is_there_an_invalid_location() const;
+
 };
 
 # include "Location.hpp"

@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/05 15:56:48 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/06 15:58:41 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -234,4 +234,20 @@ Location	*VirtualServer::get_correspondant_location(const std::string &path) con
 		}
 	}
 	return (location);
+}
+
+bool	VirtualServer::is_there_an_invalid_location() const
+{
+	Location *curr_location;
+
+	for (std::map<std::string, Location *>::const_iterator it = _locations.begin(); it != _locations.end(); it++)
+	{
+		curr_location = it->second;
+		if (curr_location->is_http_method_allowed("POST"))
+			if (curr_location->get_upload_path().empty())
+				return (true);
+		if (curr_location->get_root_path().empty())
+			return (true);
+	}
+	return (false);
 }

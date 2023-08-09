@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   include.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 18:21:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/02 13:50:42 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/06 18:40:02 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <sys/select.h>
+# include <sys/stat.h>
+# include <dirent.h>
 # include <fcntl.h>
 # include <unistd.h>
 
@@ -37,5 +39,6 @@
 // My Headers
 # include "MyTypes.hpp"
 # include "ParsingHelpers.hpp"
+# include "FileHandler.hpp"
 
 # endif

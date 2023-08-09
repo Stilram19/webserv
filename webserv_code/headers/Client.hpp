@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:40:31 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/05 17:10:20 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/06 09:16:50 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 class VirtualServer;
 class Request;
+class Response;
 
 # include "include.hpp"
 
@@ -72,5 +73,6 @@ class Client
 
 # include "Request.hpp"
 # include "VirtualServer.hpp"
+# include "Response.hpp"
 
 #endif

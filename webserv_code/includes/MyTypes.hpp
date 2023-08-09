@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 13:46:58 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/05 18:58:04 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/06 19:12:19 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,15 @@
 # define REQUEST_HEADER_BUFFER_SIZE 8192
 # define READ_BUFFER_SIZE   1024
 
+# define SUCCESS 0
+# define ERROR 1
+
 enum e_request_handling_step
 {
     HEADER_READING = 0, BODY_READING
 };
 
-enum e_request_status
+enum e_status_code
 {
     WORKING = 0, NORMAL_TERM, BAD_TERM
 };
