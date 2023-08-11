@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 18:48:37 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/11 04:15:12 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,9 +44,11 @@ class Request
 		// Request Line Infos
 		std::string	_http_method;
 		std::string _request_uri;
-		std::string _resource_path;
+		std::string _resource_logical_path;
+		std::string _resource_physical_path;
 		std::string	_query_string;
 		std::string _fragment;
+		std::string	_protocol_version;
 
 		// Headers Infos
 		std::map<std::string, std::vector<std::string> > _request_headers;
@@ -66,7 +68,7 @@ class Request
 
 		// Body related
 		bool			transfer_encoding_chunked;
-		size_t			content_length;
+		size_t			_content_length;
 		size_t			body_read_bytes;
 		size_t			_consumed_body_bytes_size;
 		RawDataBuffer	*_consumed_body_bytes;
@@ -93,12 +95,12 @@ class Request
 		void	headers_parsing(int start);
 		int		get_http_method(const std::string &method);
 		void	request_uri_parsing();
-		void	request_uri_decoding();
+		void	percent_decoding(std::string &str);
 		void	extracting_body_consumed_bytes();
 		void	set_config_infos();
 		void	set_virtual_server();
 		void	set_location();
-		void	set_real_resource_path();
+		void	set_physical_resource_path();
 		void	extracting_body_headers();
 		void	important_headers_extraction();
 		void	extracting_connection_type();
@@ -127,6 +129,12 @@ class Request
 		Location			*get_location() const;
 		const std::string 	&get_uri_resource_path() const;
 		const std::string	&get_request_method() const;
+		const std::string   &get_body_file_path() const;
+		const std::string	&get_content_length() const;
+		const std::string	&get_protocol_version() const;
+		const std::string	&get_query_string() const;
+		const std::string	&get_physical_resource_path() const;
+		const std::string   &get_logical_resource_path() const;
 
 	public:
 		// Main Method

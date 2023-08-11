@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:23:05 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 22:11:45 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/11 03:37:36 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,10 +44,12 @@ class Response
     private:
         // Attributes
         bool                                        _is_there_index;
+        bool                                        _cgi_flag;
         int                                         _status;
         int                                         _temporary_storage_type;
         int                                         _handling_station;
         e_status_code                               _status_code;
+        size_t                                      _cgi_start_time;
         Request                                     *_request;
         VirtualServer                               *_VServer;
         Location                                    *_location;
@@ -55,9 +57,11 @@ class Response
         std::string                                 _request_resource_path;
         std::string                                 _response_body_file_name;
         std::string                                 _index_file;
-        std::string                                 _response_buffer;
+        std::string                                 _header_buffer;
+        std::string                                 _body_buffer;
         std::string                                 _redirection;
         std::string                                 _request_body_file_path;
+        std::map<std::string>                       _cgi_env_vector;
         std::map<int, PtrToResponseStation>         _stations;
         std::map<std::string, PtrToMethodHandler>   _methods_handlers;
         std::map<e_status_code, std::string>        _status_code_pages;
@@ -77,6 +81,10 @@ class Response
         bool                is_directory_listing_on() const;
         const std::string   &get_request_method() const;
         void                extracting_index_file();
+        void                redirect_cgi_input() const;
+        void                redirect_cgi_output() const;
+        void                regular_file_handler(const std::string &regular_file);
+        void                cgi_environment_setup(const std::string &script_path);
 
     private:
         // Getters
@@ -92,8 +100,6 @@ class Response
         // Body Producers
         void    produce_html_for_status_code();
         void    produce_html_for_directory_listing();
-        void    return_requested_file();
-        void    regular_file_handler(const std::string &regular_file);
         void    cgi();
         
     private:

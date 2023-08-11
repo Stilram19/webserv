@@ -6,14 +6,15 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:22:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 22:14:53 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/11 03:50:10 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Response.hpp"
 
 // Constructor & Destructor
-Response::Response(Request *request) : _is_there_index(false), _status(WORKING), _temporary_storage_type(FILE), _handling_station(MAIN_PROCESSING), _status_code(OK), _request(request)
+Response::Response(Request *request) : _is_there_index(false), _cgi_flag(false), _status(WORKING), \
+    _temporary_storage_type(FILE), _handling_station(MAIN_PROCESSING), _status_code(OK), _cgi_start_time(0), _request(request)
 {
     _VServer = request->get_server();
     _location = request->get_location();
@@ -74,6 +75,123 @@ void    Response::extracting_index_file()
     _is_there_index = true;
 }
 
+void    Response::redirect_cgi_input() const
+{
+    int fd = open(request_body_file_path.c_str(), O_RDONLY);
+
+    if (fd == -1)
+        throw INTERNAL_SERVER_ERROR;
+
+    // redirecting the input to the request body file.
+    if (dup2(fd, 0) == -1)
+        throw INTERNAL_SERVER_ERROR;
+}
+
+void    Response::redirect_cgi_output() const
+{
+    // Creating a file in /tmp
+
+    if (FileHandler::random_file_name_generation(_response_body_file_name, "/tmp"))
+        throw INTERNAL_SERVER_ERROR;
+
+    int fd = open(_response_body_file_name.c_str(), O_WRONLY);
+
+    if (fd == -1)
+        throw INTERNAL_SERVER_ERROR;
+
+    // redirecting the output to the randomly generated file.
+    if (dup2(fd, 1) == -1)
+        throw INTERNAL_SERVER_ERROR;
+}
+
+void    Response::cgi_environment_setup(const std::string &script_path)
+{
+    // manual variable setting
+    _cgi_env_vector.push_back("REQUEST_METHOD=" + _request_method);
+    _cgi_env_vector.push_back("SERVER_PROTOCOL=" + _request->get_protocol_version());
+    _cgi_env_vector.push_back("QUERY_STRING=" + _request->get_query_string());
+    _cgi_env_vector.push_back("SCRIPT_NAME=" + _request->get_script_name()); // the logical path of the script
+    _cgi_env_vector.push_back("PATH_INFO=" + _request->get_path_info());
+    _cgi_env_vector.push_back("SCRIPT_FILENAME=" + _request->get_script_fullname()); // the full path of the script in the server filesystem
+    _cgi_env_vector.push_back("REDIRECT_STATUS=200");
+    _cgi_env_vector.push_back("REQUEST_URI=" + _request->get_script_name());
+
+    // Setting the request headers in the environment
+    const std::map<std::string, std::vector<std::string> >    &_request_headers = _request->get_headers();
+
+    for (std::map<std::string, std::vector<std::string> >::const_iterator it = _request_headers.begin(); it != _request_headers.end(); it++)
+    {
+        std::string header_key = it->first;
+        std::string header_value;
+
+        if (header_key == "content-length")
+        {
+            _cgi_env_vector.push_back("CONTENT_LENGTH=" + _request->get_content_length());
+            continue ;
+        }
+
+        if (header_key == "content-type")
+        {
+            _cgi_env_vector.push_back("CONTENT_TYPE=" + _request->get_content_type());
+            continue ;
+        }
+
+        // converting the header to uppercase & replacing '-' with '_'
+        std::str_to_upper(header_key);
+        std::str_tr(header_key, '-', '_');
+
+        // finally adding the HTTP_ prefix
+        header_key = "HTTP_" + header_key;
+
+        // extracting the value
+        for (std::vector<std::string>::const_iterator it1 = it->second.begin(); it1 != it->second.end(); it++)
+        {
+            header_value += (*it1);
+            if (it1 + 1 != it->second.end())
+                header_value += ',';
+        }
+
+        // setting the variable into the map
+        _cgi_env_vector.push_back(header_key + header_value);
+    }
+}
+
+void    Response::regular_file_handler(const std::string &regular_file)
+{
+
+    // Checking if the regular file has read permission (GET, POST)
+
+    if (access(regular_file.c_str(), F_OK | R_OK))
+        throw FORBIDDEN;
+
+    // Checking if there is a cgi handler for the regular file
+
+    std::string file_extension = ParsingHelpers::get_file_extension(regular_file);
+    std::string cgi_handler = _location->get_cgi_handler(file_extension);
+
+    if (!cgi_handler.empty())
+    {
+        _cgi_flag = true;
+        cgi(regular_file, cgi_handler);
+        return ;
+    }
+
+    // 201 created for POST
+    if (_request_method == "POST")
+    {
+        _status_code = CREATED;
+        produce_html_for_status_code();
+        return ;
+    }
+
+    // 200 OK for GET
+    _status_code = OK;
+    _response_body_file_name = _request_resource_path;
+
+    // the body is all there
+    respond();
+}
+
 // ********************* GETTERS *********************
 
 int Response::get_status() const
@@ -99,14 +217,19 @@ void    Response::respond()
 
 void    Response::produce_response_header()
 {
+    if (_cgi_flag)
+    {
 
+    } 
 }
 
 // ********************* BODY PRODUCERS *********************
 
 void    Response::produce_html_for_status_code()
 {
-    std::string html_file_name = _location->get_error_page();
+    _temporary_storage_type = RAM_BUFFER;
+
+    std::string html_file_name = _VServer->get_error_page(_status_code);
 
     if (!html_file_name.empty())
     {
@@ -116,7 +239,7 @@ void    Response::produce_html_for_status_code()
 
         if (!input_stream.is_open())
             throw INTERNAL_SERVER_ERROR;
-        
+
         while (std::getline(input_stream, buffer))
             _body_buffer += buffer;
 
@@ -148,9 +271,10 @@ void    Response::produce_html_for_status_code()
 
 void    Response::produce_html_for_directory_listing()
 {
-    _response_buffer = "<html>\n<head>\n<title>Directory Listing </title>\n</head>\n<body>\n<h1>Directory Listing for ";
-    _response_buffer += _request_resource_path;
-    _response_buffer += "</h1>\n<ul>\n";
+    _temporary_storage_type = RAM_BUFFER;
+    _body_buffer = "<html>\n<head>\n<title>Directory Listing </title>\n</head>\n<body>\n<h1>Directory Listing for ";
+    _body_buffer += _request_resource_path;
+    _body_buffer += "</h1>\n<ul>\n";
 
     // Opening the directory and pointing to the stream object, which is pointing on the first entry.
     DIR *dir_stream = opendir(_request_resource_path.c_str());
@@ -169,15 +293,17 @@ void    Response::produce_html_for_directory_listing()
     {
         if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
             continue ;
-        _response_buffer += "<li><a href=\"";
-        _response_buffer += "./";
-        _response_buffer += entry->d_name;
-        _response_buffer += "\">";
-        _response_buffer += entry->d_name;
-        _response_buffer += "</a></li>\n";
+        _body_buffer += "<li><a href=\"";
+        _body_buffer += "./";
+        _body_buffer += entry->d_name;
+        if (entry->d_type == DT_DIR)
+            _body_buffer += "/";
+        _body_buffer += "\">";
+        _body_buffer += entry->d_name;
+        _body_buffer += "</a></li>\n";
     }
 
-    _response_buffer += "\n</ul>\n</body>\n</html>";
+    _body_buffer += "\n</ul>\n</body>\n</html>";
 
     // Closing the open file (freeing the resources allocated for the stream object)
     closedir(dir_stream);
@@ -186,31 +312,63 @@ void    Response::produce_html_for_directory_listing()
     respond();
 }
 
-void    Response::regular_file_handler(const std::string &regular_file)
+void    Response::cgi(std::string &script_path, std::string &cgi_interpreter)
 {
-    // Checking if there is a cgi handler for the regular file
 
-    std::string file_extension = ParsingHelpers::get_file_extension(regular_file);
-    std::string cgi_handler = _location->get_cgi_handler(file_extension);
+    // Setting the environment variables needed in the cgi
 
-    if (!cgi_handler.empty())
+    cgi_environment_setup(script_path);
+
+    // using c style for execve
+    char **env = new char *[_cgi_env_vector.length() + 1];
+
+    for (size_t i = 0; i < _cgi_env_vector.length(); i++)
+        env[i] = _cgi_env_vector[i].c_str();
+    env[_cgi_env_vector.length()] = NULL;
+
+    // redirecting the stdin and stdout of the process executing the cgi
+
+    if (_request_method == "POST")
+        redirect_cgi_input();
+
+    redirect_cgi_output();
+
+    // setting execve args
+    char **args = new char *[3];
+
+    args[0] = cgi_interpreter.c_str();
+    args[1] = script_path.c_str();
+    args[2] = NULL;
+
+    // Setting the timer
+	struct timeval	t;
+
+	gettimeofday(&t, NULL);
+	_cgi_timer = t.tv_sec * 1000000 + t.tv_usec;
+
+    // spowning the cgi process
+    int pid = fork();
+
+    if (pid == -1)
+        throw INTERNAL_SERVER_ERROR;
+
+    if (pid == 0)
     {
-        cgi();
-        return ;
+        // changing the directory to the correct directory (check the subject)
+        if (chdir(_request->get_script_directory()) == -1)
+            exit(EXIT_FAILURE);
+        execve(args[0], args, env);
+        exit(EXIT_FAILURE);
     }
 
-    // if no cgi handler exists, the request resource file content is returned.
-    if (_request_method == "POST")
-        throw FORBIDDEN;
+    // releasing the memory in the parent.
+    delete [] args;
+    delete [] env;
 
-    // 200 OK for GET
-    _status_code = OK;
-    _response_body_file_name = _request_resource_path;
-    respond();
-}
+    // switching the reposonse handling station to 'waiting for cgi'
+    _handling_station = WAITING_FOR_CGI;
 
-void    Response::cgi()
-{
+    wait_for_cgi(pid);
 }
 
 // ********************* METHODS HANDLER *********************
@@ -239,7 +397,6 @@ void    Response::get_handler()
         throw FORBIDDEN;
 
     // if directory listing ON ==> we should produce the html file for directory listing
-    _temporary_storage_type = RAM_BUFFER;
     produce_html_for_directory_listing();
 }
 
@@ -314,12 +471,12 @@ void    Response::main_processing()
     // preliminary tests if the resource is a directory
     if (FileHandler::is_directory(_request_resource_path.c_str()))
     {
-        // Redirecting with a '/' terminated directory path.
-        if (_request_resource_path.back() != '/')
+        // Redirecting to the same directory path, terminated by '/'.
+        if (_request_resource_path[_request_resource_path.length() - 1] != '/')
         {
             _redirection = _request_resource_path + '/';
             _status = MOVED_PERMANENTLY;
-            if (_http_method == "DELETE")
+            if (_request_method == "DELETE")
                 _status = CONFLICT;
             produce_html_for_status_code();
             return ;
@@ -332,6 +489,40 @@ void    Response::main_processing()
     PtrToMethodHandler method_handler = _methods_handlers[_request_method];
 
     (this->*method_handler)();
+}
+
+void    Response::wait_for_cgi(int pid)
+{
+    // wait for cgi with no hang
+    int status;
+    int ret = waitpid(pid, &status, WNOHANG);
+
+    if (ret != -1)
+    {
+        kill(pid, SIGTERM);
+        throw INTERNAL_SERVER_ERROR;
+    }
+
+    if (ret == 0)
+    {
+        struct timeval	t;
+        size_t          curr_time;
+
+	    gettimeofday(&t, NULL);
+	    curr_time = t.tv_sec * 1000000 + t.tv_usec;
+        if (curr_time - _cgi_start_time >= CGI_TIMEOUT)
+        {
+            kill(pid, SIGTERM);
+            throw GATEWAY_TIMEOUT;
+        }
+        return ;
+    }
+
+    if (!WIFEXITED(status) || WEXITSTATUS(status) == EXIT_FAILURE)
+        throw INTERNAL_SERVER_ERROR;
+
+    // the cgi is done successfully and the body is all there
+    respond();
 }
 
 void    Response::response_sending()
@@ -357,7 +548,6 @@ void    Response::Response_handling()
             _status = BAD_TERM;
             return ;
         }
-        _temporary_storage_type = RAM_BUFFER;
         _status_code = error_type;
         produce_html_for_status_code();
     }

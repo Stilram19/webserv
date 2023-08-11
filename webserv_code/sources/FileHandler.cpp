@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 15:11:20 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 22:06:39 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/11 03:27:19 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ int     FileHandler::delete_file(const char *path)
     return (SUCCESS);
 }
 
-int    FileHandler::delete_directory_content(const char *path)
+int    FileHandler::delete_directory(const char *path)
 {
     // Opening the directory and pointing to the stream object, which is pointing on the first entry.
     DIR *dir_stream = opendir(path);
@@ -69,16 +69,24 @@ int    FileHandler::delete_directory_content(const char *path)
         entry_full_name += entry->d_name;
         if (is_directory(entry_full_name.c_str()))
         {
-            int delete_status = delete_directory_content(entry_full_name.c_str());
+            int delete_status = delete_directory(entry_full_name.c_str());
 
             if (delete_status)
             {
                 closedir(dir_stream);
                 return (delete_status);
             }
+            continue ;
         }
-        else if (is_file(entry_full_name.c_str()))
-            unlink(entry_full_name.c_str());
+        if (is_regular_file(entry_full_name.c_str()))
+        {
+            delete_status = delete_file(entry_full_name.c_str());
+            if (delete_status)
+            {
+                closedir(dir_stream);
+                return (delete_status);
+            }
+        }
     }
 
     // Closing the open file (freeing the resources allocated for the stream object)
@@ -100,7 +108,7 @@ int FileHandler::random_file_name_generation(std::string &file_name, std::string
     // specifying the directory
     file_name = root;
 
-    if (file_name.back() != '/')
+    if (file_name[file_name.length() - 1] != '/')
         file_name += '/';
 
     // generating random name

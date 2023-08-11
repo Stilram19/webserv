@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 13:46:58 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/09 22:07:58 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/11 01:10:55 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@
 
 # define SUCCESS 0
 # define ERROR 1
-# define PREMISSION_DENIED 2
+# define PERMISSION_DENIED 2
+# define CGI_TIMEOUT 30
 
 enum e_request_handling_step
 {
@@ -58,7 +59,8 @@ enum e_status_code
     NOT_FOUND = 404,
     FORBIDDEN = 403,
     CONFLICT = 409,
-    NO_CONTENT = 204
+    NO_CONTENT = 204,
+    GATEWAY_TIMEOUT = 504
 };
 
 # define ANSI_COLOR_RESET   "\x1b[0m"

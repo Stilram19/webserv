@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 17:08:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 15:59:37 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/10 23:53:13 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,7 @@ void Location::set_cgi_handler(const std::string &input)
 	extension = input.substr(start, end - start);
 	start = ParsingHelpers::skip_blank(input.c_str(), end);
 	cgi_interpret = input.substr(start);
-	if (access(cgi_interpret.c_str(), F_OK))
+	if (access(cgi_interpret.c_str(), F_OK | X_OK))
 		throw std::runtime_error("Invalid cgi interpreter!");
 
 	// setting the pair into the map
@@ -214,9 +214,11 @@ const std::string	&Location::get_index_file(const std::string &root) const
 		if (index[0] != '/')
 			index = root + index;
 
-		// checking if it's a regular file
+		// checking if it's a regular file with read access
+		if (access(index.c_str(), F_OK | R_OK))
+			continue ;
 		if (FileHandler::is_regular_file(index.c_str()))
-			return (*it);		
+			return (*it);
 	}
 	// returning an empty string to indicate that no index file was found
 	return ("");

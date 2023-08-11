@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:37:48 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/08 17:22:16 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/10 17:34:40 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,10 +129,23 @@ size_t ParsingHelpers::first_space(const char *str, size_t pos)
 
 std::string	ParsingHelpers::get_file_extension(const std::string &file)
 {
-	size_t		extension_pos = file.find('.');
+	size_t		extension_pos = file.rfind('.');
 	std::string	extension = "";
 
 	if (extension_pos != std::string::npos)
 		extension = file.substr(extension_pos);
 	return (extension);
+}
+
+void	ParsingHelpers::str_to_upper(std::string &str)
+{
+	for (int i = 0; str[i]; i++)
+		str[i] = toupper(str[i]);
+}
+
+void	ParsingHelpers::str_tr(std::string &str, char old_c, char new_c)
+{
+	for (int i = 0; str[i]; i++)
+		if (str[i] == old_c)
+			std[i] = new_c;
 }

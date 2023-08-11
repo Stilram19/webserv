@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 18:21:36 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/06 18:40:02 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/11 01:09:51 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,13 @@
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <sys/select.h>
+# include <sys/wait.h>
 # include <sys/stat.h>
 # include <dirent.h>
 # include <fcntl.h>
 # include <unistd.h>
+# include <sys/time.h>
+# include <signal.h>
 
 // c system headers with the c prefix
 # include <cmath>

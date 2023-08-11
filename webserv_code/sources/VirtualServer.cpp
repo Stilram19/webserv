@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 18:03:46 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/11 03:57:16 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,7 +164,7 @@ void VirtualServer::set_error_page_path(const std::string &input)
 	if (!is_error_number(error_number))
 		throw std::runtime_error("Invalid http error number!");
 
-	if (access(error_page.c_str(), F_OK | W_OK | R_OK))
+	if (access(error_page.c_str(), F_OK | R_OK))
 		throw std::runtime_error("Invalid error page path!");
 	if (!FileHandler::is_regular_file(error_page.c_str()))
 		throw std::runtime_error("Invalid error page path!");
@@ -199,11 +199,11 @@ const std::string &VirtualServer::get_host_address() const
 	return (_host_address);
 }
 
-const std::string	VirtualServer::get_error_page(int error_number) const
+const std::string	&VirtualServer::get_error_page(int error_number) const
 {
 	try
 	{
-		const std::string error_page = _error_pages.at(error_number);
+		const std::string &error_page = _error_pages.at(error_number);
 
 		return (error_page);
 	}
@@ -222,9 +222,7 @@ std::string VirtualServer::get_location_key(const std::string &path) const
 	{
 		std::string location_key = it->first;
 
-		if (location_key.length() > 1 && location_key[location_key.length() - 1] == '/')
-			location_key = location_key.substr(0, location_key.length() - 1);
-		std::cout << "LOCATION KEY: |" << location_key << "|" << std::endl;
+		// std::cout << "LOCATION KEY: |" << location_key << "|" << std::endl;
 
 		if (location_key.length() > path.length())
 			continue ;

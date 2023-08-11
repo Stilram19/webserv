@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 18:56:14 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/11 04:24:44 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ Request::Request(int client_socket, const std::vector<VirtualServer *> &VServers
     header_read_bytes = 0;
     _raw_header_buffer = new RawDataBuffer();
     transfer_encoding_chunked = false;
-    content_length = 0;
+    _content_length = 0;
     body_read_bytes = 0;
     _consumed_body_bytes_size = 0;
     _consumed_body_bytes = NULL;
@@ -67,8 +67,8 @@ int Request::request_line_parsing()
     // (*) Extracting The Protocol Version
     start = ParsingHelpers::skip_blank(_header_buffer.c_str(), end);
     end = _header_buffer.find("\r\n", start);
-    std::string protocol_version = _header_buffer.substr(start, end - start);
-    if (protocol_version != "HTTP/1.1")
+    _protocol_version = _header_buffer.substr(start, end - start);
+    if (_protocol_version != "HTTP/1.1")
         throw HTTP_VERSION_NOT_SUPPORTED;
 
     return (end + 2);
@@ -132,9 +132,6 @@ void    Request::request_uri_parsing()
     if (_request_uri.length() > REQUEST_HEADER_BUFFER_SIZE)
         throw REQUEST_URI_TOO_LONG;
 
-    // Decoding the uri (replace %<hexadecimal_value> by its corresponding character)
-    request_uri_decoding();
-
     // Extracting the uri components
     size_t start = _request_uri.find('#');
     size_t end = _request_uri.length();
@@ -142,33 +139,36 @@ void    Request::request_uri_parsing()
     if (start != std::string::npos)
     {
         _fragment = _request_uri.substr(start, end - start);
+        percent_decoding(_fragment);
         end = start;
     }
     start = _request_uri.find('?');
     if (start != std::string::npos)
     {
         _query_string = _request_uri.substr(start, end - start);
+        percent_decoding(_query_string);
         end = start;
     }
-    _resource_path = _request_uri.substr(0, end);
+    _resource_logical_path = _request_uri.substr(0, end);
+    percent_decoding(_resource_logical_path);
 }
 
-void    Request::request_uri_decoding()
+void    Request::percent_decoding(std::string &str)
 {
-    std::string new_request_uri;
+    std::string new_str;
 
-    for (int i = 0; _request_uri[i]; i++)
+    for (int i = 0; str[i]; i++)
     {
-        char new_character = _request_uri[i];
+        char new_character = str[i];
         if (new_character == '\%')
         {
             new_character = \
-            ParsingHelpers::decode_percent_encoded_character(_request_uri.c_str() + i + 1);
+            ParsingHelpers::decode_percent_encoded_character(str.c_str() + i + 1);
             i += 2;
         }
-        new_request_uri += new_character;
+        new_str += new_character;
     }
-    _request_uri = new_request_uri;
+    str = new_str;
 }
 
 void    Request::extracting_body_consumed_bytes()
@@ -223,7 +223,7 @@ void		Request::set_virtual_server()
 
 void    Request::set_location()
 {
-    _location_key = _VServer->get_location_key(_resource_path);
+    _location_key = _VServer->get_location_key(_resource_logical_path);
     _location = _VServer->get_correspondant_location(_location_key);
 
     // checking if the request source path is not found
@@ -235,24 +235,19 @@ void    Request::set_location()
         throw METHOD_NOT_ALLOWED;
 }
 
-void    Request::set_real_resource_path()
+void    Request::set_physical_resource_path()
 {
     size_t      location_key_len = _location_key.length();
-    std::string real_resource_path = _location->get_root_path();
+    std::string relative_path = _resource_logical_path.c_str() + _location_key.length();
 
-    _resource_path = _resource_path.c_str() + location_key_len;
-    if (real_resource_path[real_resource_path.length() - 1] == '/')
-    {
-        if (_resource_path[0] == '/')
-            _resource_path = _resource_path.c_str() + 1;
-        real_resource_path += _resource_path;
-        _resource_path = real_resource_path;
-        return ;
-    }
-    if (_resource_path[0] != '/')
-        real_resource_path += '/';
-    real_resource_path += _resource_path;
-    _resource_path = real_resource_path;
+    _resource_physical_path = _location->get_root_path();
+    if (_resource_physical_path[_resource_physical_path.length() - 1] == '/'
+        && relative_path[0] == '/')
+        relative_path = relative_path.c_str() + 1;
+    if (_resource_physical_path[_resource_physical_path.length() - 1] != '/'
+        && relative_path[0] != '/')
+        _resource_physical_path += '/';
+    _resource_physical_path += relative_path;
 }
 
 void    Request::extracting_body_headers()
@@ -283,9 +278,9 @@ void    Request::extracting_body_headers()
             te_chunked_middle_ware = new TEChunkedMiddleWare();
             return ;
         }
-        content_length = ParsingHelpers::my_stoi(it1->second.back());
+        _content_length = ParsingHelpers::my_stoi(it1->second.back());
 
-        if (content_length > _VServer->get_max_client_body_size())
+        if (_content_length > _VServer->get_max_client_body_size())
             throw REQUEST_ENTITY_TOO_LARGE;
         return ;
     }
@@ -372,9 +367,9 @@ void    Request::extract_body_chunk(const char *body_packet, size_t read_bytes)
         // (*) Content length handler
         body_read_bytes += read_bytes;
         std::cout << "BODY_READ_BYTES: " << body_read_bytes << std::endl;
-        if (body_read_bytes > content_length)
+        if (body_read_bytes > _content_length)
             throw REQUEST_ENTITY_TOO_LARGE;
-        if (body_read_bytes == content_length)
+        if (body_read_bytes == _content_length)
             _status = NORMAL_TERM;
         append_chunk_to_body_file(body_packet, read_bytes);
         return ;
@@ -560,6 +555,40 @@ const std::string	&Request::get_request_method() const
 const std::string   &Request::get_body_file_path() const
 {
     return  (_body_file_path);
+}
+
+const std::string   &Request::get_content_length() const
+{
+    try
+    {
+        const std::string &content_length = _request_headers.at("content-length").back();
+
+        return (content_length);
+    }
+    catch (std::exception &e)
+    {
+        return ("");
+    }
+}
+
+const std::string   &Request::get_protocol_version() const
+{
+    return (_protocol_version);
+}
+
+const std::string   &Request::get_query_string() const
+{
+    return (_query_string);
+}
+
+const std::string   &Request::get_physical_resource_path() const
+{
+    return (_resource_physical_path);
+}
+
+const std::string   &Request::get_logical_resource_path() const
+{
+    return (_resource_logical_path);
 }
 
 // **************** MAIN FUNCTION ****************

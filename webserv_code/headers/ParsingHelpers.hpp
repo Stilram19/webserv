@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:38:20 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/08 17:22:57 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/10 17:34:31 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,10 @@ class ParsingHelpers
 		static bool			is_http_method(const std::string &input);
 		static size_t		hexa_to_decimal(const char *hexa_str);
 		static size_t		first_space(const char *str, size_t pos);
-		static std::string	get_file_extension(const std::string &file)
+		static std::string	get_file_extension(const std::string &file);
+		static void			str_to_upper(std::string &str);
+		static void			str_tr(std::string &str, char old_c, char new_c);
+		
 };
 
 #endif
