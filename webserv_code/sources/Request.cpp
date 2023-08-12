@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/11 18:36:27 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/12 16:13:27 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,7 @@ void    Request::headers_parsing(int start)
         start = end + 2;
 
         // Checking if the header is too long
-        if (key.length() + value.length() >= REQUEST_HEADER_BUFFER_SIZE)
+        if (key.length() + value.length() >= HEADER_MAX_BUFFER_SIZE)
             throw REQUEST_HEADER_FIELDS_TOO_LARGE;
 
         // Adding the value to the key values

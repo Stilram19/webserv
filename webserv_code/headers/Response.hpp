@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:23:05 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/12 00:22:40 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/12 17:16:03 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,14 +27,14 @@ class Response
         // Attributes
         bool                                        _is_there_index;
         bool                                        _cgi_flag;
+        bool                                        _is_response_header_sent;
         int                                         _status;
         int                                         _temporary_storage_type;
         int                                         _handling_station;
         int                                         _cgi_pid;
-
-        // fd of the open response file of the cgi
-        int                                         _cgi_fd;
+        int                                         _body_fd;
         e_status_code                               _status_code;
+        int                                         _client_socket;
         size_t                                      _cgi_start_time;
         Request                                     *_request;
         VirtualServer                               *_VServer;
@@ -43,7 +43,6 @@ class Response
         std::string                                 _resource_physical_path;
         std::string                                 _response_body_file_name;
         std::string                                 _index_file;
-        std::string                                 _header_buffer;
         std::string                                 _body_buffer;
         std::string                                 _redirection;
         std::string                                 _request_body_file_path;
@@ -60,9 +59,10 @@ class Response
         Response();
         Response(const Response &);
         Response &operator=(const Response &);
+
     public:
         // Constructor & Destructor
-        Response(Request *request);
+        Response(int client_socket, Request *request);
         ~Response();
 
     private:
@@ -74,6 +74,15 @@ class Response
         void                redirect_cgi_output();
         void                regular_file_handler(const std::string &regular_file);
         void                cgi_environment_setup(const std::string &script_path);
+        const std::string   &get_connection() const;
+        bool                is_status_code_message(const std::string &status_code_message) const;
+        size_t              cgi_response_line_parsing(const std::string &cgi_header_buffer);
+        const std::string   &extract_cgi_response_headers();
+        const std::string   &get_content_type() const;
+        const std::string   &get_content_length() const;
+        void                cgi_headers_parsing(const std::string &cgi_header_buffer, size_t start);
+
+        void                clean_up() const;
 
     private:
         // Getters

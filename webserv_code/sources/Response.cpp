@@ -6,16 +6,17 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:22:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/12 01:56:39 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/12 17:30:30 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Response.hpp"
 
 // Constructor & Destructor
-Response::Response(Request *request) : _is_there_index(false), _cgi_flag(false), _status(WORKING), \
-    _temporary_storage_type(FILE), _handling_station(MAIN_PROCESSING), _cgi_pid(0), _cgi_fd(-1), _status_code(OK), _cgi_start_time(0), _request(request)
+Response::Response(int client_socket, Request *request) : _is_there_index(false),  _cgi_flag(false), _is_response_header_sent(false), _status(WORKING), \
+    _temporary_storage_type(FILE), _handling_station(MAIN_PROCESSING), _cgi_pid(0), _body_fd(-1), _status_code(OK), _cgi_start_time(0), _request(request)
 {
+    _client_socket = client_socket;
     _VServer = request->get_server();
     _location = request->get_location();
     _request_method = request->get_request_method();
@@ -135,11 +136,6 @@ void    Response::redirect_cgi_input() const
 
 void    Response::redirect_cgi_output()
 {
-    // Creating a file in /tmp
-
-    if (FileHandler::random_file_name_generation(_response_body_file_name, "/tmp"))
-        throw INTERNAL_SERVER_ERROR;
-
     int fd = open(_response_body_file_name.c_str(), O_WRONLY);
 
     if (fd == -1)
@@ -199,7 +195,6 @@ void    Response::cgi_environment_setup(const std::string &script_path)
 
 void    Response::regular_file_handler(const std::string &regular_file)
 {
-
     // Checking if the regular file has read permission (GET, POST)
 
     if (access(regular_file.c_str(), F_OK | R_OK))
@@ -242,7 +237,7 @@ const std::string   &Response::get_connection() const
 
 bool    Response::is_status_code_message(const std::string &status_code_message) const
 {
-    for (std::map<std::string, std::string>::const_iterator it = _status_code_messages.begin(); it != _status_code_messages.end(); it++)
+    for (std::map<e_status_code, std::string>::const_iterator it = _status_code_messages.begin(); it != _status_code_messages.end(); it++)
     {
         if (status_code_message == it->second)
             return (true);
@@ -250,7 +245,7 @@ bool    Response::is_status_code_message(const std::string &status_code_message)
     return (false);
 }
 
-void    Response::cgi_response_line_parsing(const std::string &cgi_header_buffer)
+size_t    Response::cgi_response_line_parsing(const std::string &cgi_header_buffer)
 {
     size_t pos = cgi_header_buffer.find("\r\n");
 
@@ -273,19 +268,23 @@ void    Response::cgi_response_line_parsing(const std::string &cgi_header_buffer
     if (!is_status_code_message(status_code_message))
         throw BAD_GATEWAY;
 
-    // After passing the test ==> adding the response line to the response_header_buffer
+    // After passing the test ==> adding the cgi response line to the response_header_buffer
     _response_header_buffer += response_line + "\r\n";
+
+    return (response_line.length() + 2);
 }
 
-const std::string   &Response::extract_cgi_response_headers() const
+const std::string   &Response::extract_cgi_response_headers()
 {
+    // Since the cgi output is all there, we can read the whole header with the max size expected.
     char    buffer[HEADER_MAX_BUFFER_SIZE + 1];
 
-    _cgi_fd = open(_response_body_file_name, O_RDONLY);
+    _body_fd = open(_response_body_file_name.c_str(), O_RDONLY);
 
-    if (_cgi_fd)
+    if (_body_fd == -1)
         throw INTERNAL_SERVER_ERROR;
-    int read_bytes = read(_cgi_fd, buffer, HEADER_MAX_BUFFER_SIZE);
+
+    int read_bytes = read(_body_fd, buffer, HEADER_MAX_BUFFER_SIZE);
 
     buffer[read_bytes] = '\0';
 
@@ -300,20 +299,22 @@ const std::string   &Response::extract_cgi_response_headers() const
     if ((pos = _cgi_header_buffer.find("\r\n\r\n") == std::string::npos))
         throw BAD_GATEWAY;
 
+    // Header and body separation
     _cgi_header_buffer = _cgi_header_buffer.substr(0, pos + 4);
-    lseek(_cgi_fd, _cgi_header_buffer.length() - read_bytes, SEEK_CUR);
+    lseek(_body_fd, _cgi_header_buffer.length() - read_bytes, SEEK_CUR);
 
     // response line
-    cgi_response_line_parsing(_cgi_header_buffer);
+    pos = cgi_response_line_parsing(_cgi_header_buffer);
 
     // cgi headers
+    cgi_headers_parsing(_cgi_header_buffer, pos);
 }
 
 const std::string   &Response::get_content_type() const
 {
     // checking if the body is html
-    if (_temporary_storage == RAM_BUFFER)
-        return (_content_types[".html"]);
+    if (_temporary_storage_type == RAM_BUFFER)
+        return (_content_types.at(".html"));
 
     std::string extension = ParsingHelpers::get_file_extension(_resource_physical_path);
 
@@ -322,7 +323,7 @@ const std::string   &Response::get_content_type() const
     {
         return (_content_types.at(extension));
     }
-    catch ()
+    catch (std::exception &e)
     {
         std::cout << "Unspecified Content type for " << extension << std::endl;
         return ("");
@@ -336,20 +337,20 @@ const std::string   &Response::get_content_length() const
     std::string         ret;
     std::stringstream   s;
 
-    if (_temporary_storage == RAM_BUFFER)
+    if (_temporary_storage_type == RAM_BUFFER)
         c_length = _body_buffer.length();
-    if (_temporary_storage == FILE)
+    if (_temporary_storage_type == FILE)
     {
         if (_cgi_flag)
-            fd = _cgi_fd;
+            fd = _body_fd;
 
         if (!_cgi_flag && (fd = open(_response_body_file_name.c_str(), O_RDONLY)) == -1)
             throw INTERNAL_SERVER_ERROR;
 
         int     read_bytes;
-        char    buffer[READ_SIZE_BUFFER + 1];
+        char    buffer[READ_BUFFER_SIZE + 1];
 
-        while ((read_bytes = read(fd, buffer, READ_SIZE_BUFFER)) > 0)
+        while ((read_bytes = read(fd, buffer, READ_BUFFER_SIZE)) > 0)
             c_length += read_bytes;
         if (read_bytes == -1)
             throw INTERNAL_SERVER_ERROR;
@@ -361,6 +362,53 @@ const std::string   &Response::get_content_length() const
     s << c_length;
     s >> ret;
     return (ret);
+}
+
+void    Response::cgi_headers_parsing(const std::string &cgi_header_buffer, size_t start)
+{
+    bool        term_flag = true;
+    size_t      end;
+    std::string key;
+    std::string value;
+
+    while (cgi_header_buffer[start] && (term_flag = strncmp(cgi_header_buffer.c_str() + start, "\r\n", 2)))
+    {
+        // Extracting the key and the value
+        end = cgi_header_buffer.find(':', start);
+        if (end == std::string::npos)
+            throw BAD_GATEWAY;
+        key = cgi_header_buffer.substr(start, end - start);
+        start = ParsingHelpers::skip_blank(cgi_header_buffer.c_str(), end + 1);
+        end = cgi_header_buffer.find("\r\n", start);
+        if (end == std::string::npos)
+            throw BAD_GATEWAY;
+        value = cgi_header_buffer.substr(start, end - start);
+        start = end + 2;
+
+        // Checking if the header is too long
+        if (key.length() + value.length() >= HEADER_MAX_BUFFER_SIZE)
+            throw BAD_GATEWAY;
+
+        // Adding the value to the key values, if the key is not repeated
+        if (_response_headers.find(key) != _response_headers.end())
+            throw BAD_GATEWAY;
+
+        _response_headers[key] = value;
+    }
+
+    // Checking if the response terminates with "\r\n"
+    if (term_flag)
+        throw BAD_GATEWAY;
+}
+
+void    Response::clean_up() const
+{
+    if (_body_fd != -1)
+        close(_body_fd);
+
+    // in case of cgi, removing the response body file name (randomly generated in /tmp)
+    if (_cgi_flag)
+        unlink(_response_body_file_name.c_str());
 }
 
 // ********************* GETTERS *********************
@@ -388,9 +436,6 @@ void    Response::respond()
 
 void    Response::produce_response_header()
 {
-    // Response Line: http-protocol + status_code_message
-    // Headers that exist in every response: content-length, content-type, Server, connection
-
     // Response line
     if (!_cgi_flag)
     {
@@ -415,6 +460,20 @@ void    Response::produce_response_header()
     // Checking if there is a redirection
     if (_status_code == MOVED_PERMANENTLY)
         _response_headers["Location"] = _redirection;
+
+    // appending the headers to the response header buffer
+    std::string key, value;
+
+    for (std::map<std::string, std::string>::const_iterator it = _response_headers.begin(); it != _response_headers.end(); it++)
+    {
+        key = it->first;
+        value = it->second;
+        _response_header_buffer += key;
+        _response_header_buffer += ' ';
+        _response_header_buffer += value;
+        _response_header_buffer += "\r\n";
+    }
+    _response_header_buffer += "\r\n";
 }
 
 // ********************* BODY PRODUCERS *********************
@@ -487,11 +546,8 @@ void    Response::produce_html_for_directory_listing()
     {
         if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
             continue ;
-        _body_buffer += "<li><a href=\"";
-        _body_buffer += "./";
+        _body_buffer += "<li><a href=\"./";
         _body_buffer += entry->d_name;
-        if (entry->d_type == DT_DIR)
-            _body_buffer += "/";
         _body_buffer += "\">";
         _body_buffer += entry->d_name;
         _body_buffer += "</a></li>\n";
@@ -530,6 +586,10 @@ void    Response::cgi(const std::string &script_path, const std::string &cgi_int
 
 	gettimeofday(&t, NULL);
 	_cgi_start_time = t.tv_sec;
+
+    // generating a random file name in /tmp for the cgi output
+     if (FileHandler::random_file_name_generation(_response_body_file_name, "/tmp"))
+        throw INTERNAL_SERVER_ERROR;
 
     // spowning the cgi process
     _cgi_pid = fork();
@@ -720,9 +780,58 @@ void    Response::wait_for_cgi()
     respond();
 }
 
+void    Response::send_ram_buffer(const std::string &buffer)
+{
+    int sent_bytes = write(_client_socket, buffer.c_str(), buffer.length());
+
+    // Checking if the client disconnected
+    if (sent_bytes <= 0)
+        throw CLIENT_DISCONNECT;
+}
+
+void    Response::send_body_file_chunk()
+{
+    int     read_bytes, sent_bytes;
+    char    body_chunk_buffer[READ_BUFFER_SIZE + 1];
+
+    // reading the body chunk
+    read_bytes = read(_body_fd, body_chunk_buffer, READ_BUFFER_SIZE);
+    body_chunk_buffer[read_bytes] = '\0';
+
+    if (read_bytes == 0)
+    {
+        _status = NORMAL_TERM;
+        return ;
+    }
+
+    // sending the body chunk
+    sent_bytes = write(_client_socket, body_chunk_buffer, read_bytes);
+
+    if (send_bytes <= 0)
+        throw CLIENT_DISCONNECT;
+}
+
 void    Response::response_sending()
 {
+    // (*) sending the header once
+    if (!_is_response_header_sent)
+    {
+        send_ram_buffer(_response_header_buffer);
+        _is_response_header_sent = true;
+        return ;
+    }
 
+    // (*) sending the body
+
+    // send it once, if it's a small html body that is stored in a RAM buffer
+    if (_temporary_storage_type == RAM_BUFFER)
+    {
+        send_ram_buffer(_body_buffer);
+        return ;
+    }
+
+    // send it chunk by chunk, if it's stored premanently in a file
+    send_body_file_chunk();
 }
 
 // ********************* MAIN FUNCTION *********************
