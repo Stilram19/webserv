@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 15:11:20 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/11 03:27:19 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/11 16:04:10 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,7 @@ int    FileHandler::delete_directory(const char *path)
     return (rmdir(path));
 }
 
-int FileHandler::random_file_name_generation(std::string &file_name, std::string &root)
+int FileHandler::random_file_name_generation(std::string &file_name, const std::string &root)
 {
     int j = 0, read_bytes = 0;
     int fd = open("/dev/random", O_RDONLY);
@@ -142,4 +142,13 @@ bool FileHandler::is_resource_path_found(const char *path)
     if (FileHandler::is_directory(path))
         return (true);
     return (false);
+}
+
+std::string FileHandler::get_file_root(const std::string &full_file_path)
+{
+    size_t pos = file_path.rfind('/');
+
+    std::string ret = file_path.substr(0, pos);
+    ret += '/';
+    return (ret);
 }

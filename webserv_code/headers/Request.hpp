@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/11 04:15:12 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/11 15:47:20 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,19 +122,20 @@ class Request
 
 	public:
 		// Getters
-		bool				get_status() const;
-		e_status_code		get_error_type() const;
-		bool				is_connect_keep_alive() const;
-		VirtualServer		*get_server() const;
-		Location			*get_location() const;
-		const std::string 	&get_uri_resource_path() const;
-		const std::string	&get_request_method() const;
-		const std::string   &get_body_file_path() const;
-		const std::string	&get_content_length() const;
-		const std::string	&get_protocol_version() const;
-		const std::string	&get_query_string() const;
-		const std::string	&get_physical_resource_path() const;
-		const std::string   &get_logical_resource_path() const;
+		bool													get_status() const;
+		e_status_code											get_error_type() const;
+		bool													is_connect_keep_alive() const;
+		VirtualServer											*get_server() const;
+		Location												*get_location() const;
+		const std::string										&get_request_method() const;
+		const std::string   									&get_body_file_path() const;
+		const std::string										&get_content_length() const;
+		const std::string										&get_protocol_version() const;
+		const std::string										&get_query_string() const;
+		const std::string										&get_physical_resource_path() const;
+		const std::string   									&get_logical_resource_path() const;
+		const std::string										&get_request_uri() const;
+		const std::map<std::string, std::vector<std::string> >	&get_headers() const;
 
 	public:
 		// Main Method

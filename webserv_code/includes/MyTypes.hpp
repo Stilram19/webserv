@@ -6,14 +6,14 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 13:46:58 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/11 01:10:55 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/12 00:52:41 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef MY_TYPES_HPP
 # define MY_TYPES_HPP
 
-# define REQUEST_HEADER_BUFFER_SIZE 8192
+# define HEADER_MAX_BUFFER_SIZE 8192
 # define READ_BUFFER_SIZE   1024
 
 # define SUCCESS 0
@@ -29,7 +29,7 @@ enum e_request_handling_step
 // Stations where the response might call the handler more than one time
 enum e_response_handling_stations
 {
-    MAIN_PROCESSING = 0, STORING_REQUEST_BODY, WAITING_FOR_CGI, RESPONSE_SENDING
+    MAIN_PROCESSING = 0, WAITING_FOR_CGI, RESPONSE_SENDING
 };
 
 enum e_status
@@ -60,7 +60,8 @@ enum e_status_code
     FORBIDDEN = 403,
     CONFLICT = 409,
     NO_CONTENT = 204,
-    GATEWAY_TIMEOUT = 504
+    GATEWAY_TIMEOUT = 504,
+    BAD_GATEWAY = 502
 };
 
 # define ANSI_COLOR_RESET   "\x1b[0m"

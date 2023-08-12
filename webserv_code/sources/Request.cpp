@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/11 04:24:44 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/11 18:36:27 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,7 +194,7 @@ void		Request::set_config_infos()
     set_location();
 
     // deducing the resource path in the file system
-    set_real_resource_path();
+    set_physical_resource_path();
 }
 
 void		Request::set_virtual_server()
@@ -322,7 +322,8 @@ void    Request::display_request_header_infos()
     std::cout << ANSI_COLOR_CYAN << "***************** HEADER PARSING INFOS *****************" << ANSI_COLOR_RESET << std::endl;
     std::cout << "Http Method: " << "'" << _http_method << "'" << std::endl;
     std::cout << "Request uri: " << "'" << _request_uri << "'" << std::endl;
-    std::cout << "Resource path: " << "'" << _resource_path << "'" << std::endl;
+    std::cout << "Resource logical path: " << "'" << _resource_logical_path << "'" << std::endl;
+    std::cout << "Resource physical path: " << "'" << _resource_physical_path << "'" << std::endl;
     std::cout << "query string: " << "'" << _query_string << "'" << std::endl;
     std::cout << "fragment: " << "'" << _fragment << "'" << std::endl;
     std::cout << "==> EXTRACTED HEADERS: " << std::endl;
@@ -532,21 +533,6 @@ Location    *Request::get_location() const
     return (_location);
 }
 
-const std::string  &Request::get_uri_resource_path() const
-{
-    return (_resource_path);
-}
-
-const std::string	&Request::get_request_method() const
-{
-    return (_http_method);
-}
-
-const std::string 	&Request::get_uri_resource_path() const
-{
-    return (_resource_path);
-}
-
 const std::string	&Request::get_request_method() const
 {
     return (_http_method);
@@ -589,6 +575,16 @@ const std::string   &Request::get_physical_resource_path() const
 const std::string   &Request::get_logical_resource_path() const
 {
     return (_resource_logical_path);
+}
+
+const std::string	&Request::get_request_uri() const
+{
+    return (_request_uri);
+}
+
+const std::map<std::string, std::vector<std::string> >	&Request::get_headers() const
+{
+    return (_request_headers);
 }
 
 // **************** MAIN FUNCTION ****************

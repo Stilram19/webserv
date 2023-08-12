@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 15:44:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/11 03:57:16 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/12 00:12:18 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,10 +164,16 @@ void VirtualServer::set_error_page_path(const std::string &input)
 	if (!is_error_number(error_number))
 		throw std::runtime_error("Invalid http error number!");
 
+	// Permissions & regular file
 	if (access(error_page.c_str(), F_OK | R_OK))
 		throw std::runtime_error("Invalid error page path!");
 	if (!FileHandler::is_regular_file(error_page.c_str()))
 		throw std::runtime_error("Invalid error page path!");
+
+	// Checking if the error page is html
+	if (ParsingHandler::get_file_extension(error_page) != ".html")
+		throw std::runtime_error("Error page must be html!");
+
 	// setting the pair into the map
 	_error_pages[error_number] = error_page;
 }
