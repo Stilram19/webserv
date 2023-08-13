@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebservCore.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 15:05:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/02 15:28:23 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/13 08:07:48 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ int	WebservCore::create_socket(const std::string &hostname, const std::string &p
 	// Setting the SO_REUSEADDR and SO_NOSIGPIPE flags at the SOL_SOCKET level.
 	int set_option_on = 1;
 	setsockopt(connection_socket,  SOL_SOCKET,  SO_REUSEADDR , &set_option_on, sizeof(set_option_on));
-    // setsockopt(connection_socket,  SOL_SOCKET,  SO_NOSIGPIPE, &set_option_on, sizeof(set_option_on));
+    setsockopt(connection_socket,  SOL_SOCKET,  SO_NOSIGPIPE, &set_option_on, sizeof(set_option_on));
 
 	// Giving the socket a name
 	if (bind(connection_socket, res->ai_addr, res->ai_addrlen))
@@ -92,7 +92,7 @@ int	WebservCore::create_socket(const std::string &hostname, const std::string &p
 	freeaddrinfo(res);
 
 	//! Listening (backlog)
-	if (listen(connection_socket, 10000))
+	if (listen(connection_socket, 100))
 		throw std::runtime_error("Failed to listen!");
 
 	return (connection_socket);
@@ -175,6 +175,35 @@ void	WebservCore::read_from_client(std::vector<Client *>::iterator &it, int clie
 	}
 }
 
+void	WebservCore::write_to_client(std::vector<Client *>::iterator &it, int client_socket)
+{
+	Client *client = *it;
+
+	client->response_handling();
+
+	// Check if the response is done.
+	if (client->is_response_done())
+	{
+		// Checking if the response handling terminates due to a client disconnection
+		if (client->did_client_disconnect())
+		{
+			drop_client(it);
+			return ;
+		}
+		// Unset the socket from read, and set it to write.
+		FD_CLR(client_socket, &_write_sockets);
+
+		// checking if the server should close the connection with the client
+		// if (!client->is_connect_keep_alive())
+		// {
+			drop_client(it);
+			// return ;
+			std::cout << "Droped client!" << std::endl;
+		// }
+		// client->reset();
+	}
+}
+
 void	WebservCore::serve_connected_clients()
 {
 	int		client_socket;
@@ -192,20 +221,13 @@ void	WebservCore::serve_connected_clients()
 			read_from_client(it, client_socket);
 			continue ;
 		}
-		// (*) Respond to Client, if ready.
-		if (!FD_ISSET(client_socket, &select_write_sockets))
-			continue ;
 
-		// respond
-		// if (write(client_socket, "hello", 5) == -1)
-		// {
-		// 	std::cout << "Client Droped!" << std::endl;
-		// 	drop_client(it);
-		// 	continue ;
-		// }
-		std::cout << "I'm busy! Can't respond now!" << std::endl;
-		drop_client(it);
-		// drop_client();
+		// (*) Respond to Client, if ready.
+		if (FD_ISSET(client_socket, &select_write_sockets))
+		{
+			write_to_client(it, client_socket);
+			continue ;
+		}
 	}
 }
 
@@ -254,12 +276,12 @@ void	WebservCore::launch_server()
 			throw std::runtime_error("Select failed!");
 
 		//!debugging
-		std::cout << "Accepting new connection requests..." << std::endl;
+		// std::cout << "Accepting new connection requests..." << std::endl;
 		// (*) Check and Accept new Connection requests (the SYN-ACK of the server in the three-way handshake)
 		accept_new_connection_requests();
 
 		//!debugging
-		std::cout << "Serving Connected Clients..." << std::endl;
+		// std::cout << "Serving Connected Clients..." << std::endl;
 		// (*) Read Client's sent packets, and Answer Clients that are waiting for Response.
 		serve_connected_clients();
 	}

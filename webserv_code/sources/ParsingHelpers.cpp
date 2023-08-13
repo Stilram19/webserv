@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/20 20:37:48 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/10 17:34:40 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/12 21:45:23 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,5 +147,5 @@ void	ParsingHelpers::str_tr(std::string &str, char old_c, char new_c)
 {
 	for (int i = 0; str[i]; i++)
 		if (str[i] == old_c)
-			std[i] = new_c;
+			str[i] = new_c;
 }

@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:23:13 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/11 15:47:20 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/12 23:00:52 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,14 +122,14 @@ class Request
 
 	public:
 		// Getters
-		bool													get_status() const;
+		int														get_status() const;
 		e_status_code											get_error_type() const;
 		bool													is_connect_keep_alive() const;
 		VirtualServer											*get_server() const;
 		Location												*get_location() const;
 		const std::string										&get_request_method() const;
 		const std::string   									&get_body_file_path() const;
-		const std::string										&get_content_length() const;
+		std::string												get_content_length() const;
 		const std::string										&get_protocol_version() const;
 		const std::string										&get_query_string() const;
 		const std::string										&get_physical_resource_path() const;

@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 16:22:34 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 15:36:02 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/12 21:45:04 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ class Location
 		const std::string	&get_root_path() const;
 		const std::string	&get_upload_path() const;
 		std::string			get_cgi_handler(const std::string &extension) const;
-		const std::string	&get_index_file(const std::string &root) const;
+		std::string			get_index_file(const std::string &root) const;
 
 };
 

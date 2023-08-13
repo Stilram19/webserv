@@ -1,9 +1,0 @@
-POST /sdf?asdfa=asd#asd  HTTP/1.1
-Postman-Token: <calculated when request is sent>
-#Content-Length: 12
-Transfer-Encoding: chunked
-Host: localhost:8080
-User-Agent: DummyClient
-Accept-Encoding: gzip, deflate, br
-Accept: */*
-

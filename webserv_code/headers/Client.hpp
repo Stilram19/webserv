@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/24 13:40:31 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/09 18:11:52 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/13 06:01:46 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ class Client
 
 		// Request Infos
 		bool	_is_request_done;
+		bool	_is_response_done;
 		bool	_keep_alive;
 		bool	_client_disconnect;
 		int		_request_status;
@@ -37,11 +38,11 @@ class Client
 		// to which the client sent a SYN
 		const std::vector<VirtualServer *> &_VServers;
 
-		// Random Name of the file of the request body
-		std::string _request_body_file_name;
-
 		// Request Handler
-		Request *_request;
+		Request	*_request;
+
+		// Response Handler
+		Response	*_response;	
 
 		// (*) Useless Constructors & Copy Assignment
 		Client();
@@ -56,18 +57,22 @@ class Client
 	public:
 		// Helpers
 		void		new_request();
-
+		void		new_response();
+		void    	reset();
 	public:
 		// Getters
 		int		get_client_socket() const;
 		bool	is_request_done() const;
+		bool	is_response_done() const;
 		bool	get_request_status() const;
 		bool	did_client_disconnect() const;
 		int		get_request_error() const;
+		bool	is_connect_keep_alive() const;
 
 	public:
 		// Client Handlers
 		void	request_handling();
+		void    response_handling();
 };
 
 # include "Request.hpp"

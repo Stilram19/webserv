@@ -6,11 +6,11 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 15:11:20 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/11 16:04:10 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/12 21:41:59 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "FileHandle.hpp"
+# include "FileHandler.hpp"
 
 bool    FileHandler::is_directory(const char *path)
 {
@@ -42,6 +42,7 @@ int     FileHandler::delete_file(const char *path)
 int    FileHandler::delete_directory(const char *path)
 {
     // Opening the directory and pointing to the stream object, which is pointing on the first entry.
+    int delete_status;
     DIR *dir_stream = opendir(path);
 
     if (dir_stream == NULL)
@@ -69,7 +70,7 @@ int    FileHandler::delete_directory(const char *path)
         entry_full_name += entry->d_name;
         if (is_directory(entry_full_name.c_str()))
         {
-            int delete_status = delete_directory(entry_full_name.c_str());
+            delete_status = delete_directory(entry_full_name.c_str());
 
             if (delete_status)
             {
@@ -146,9 +147,9 @@ bool FileHandler::is_resource_path_found(const char *path)
 
 std::string FileHandler::get_file_root(const std::string &full_file_path)
 {
-    size_t pos = file_path.rfind('/');
+    size_t pos = full_file_path.rfind('/');
 
-    std::string ret = file_path.substr(0, pos);
+    std::string ret = full_file_path.substr(0, pos);
     ret += '/';
     return (ret);
 }

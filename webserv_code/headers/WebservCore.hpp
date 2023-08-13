@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebservCore.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/22 17:31:58 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/02 13:43:26 by codespace        ###   ########.fr       */
+/*   Updated: 2023/08/12 23:04:46 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,7 @@ class WebservCore
 		void		drop_client(std::vector<Client *>::iterator &it);
 		void		accept_new_connection_requests();
 		void		read_from_client(std::vector<Client *>::iterator &it, int client_socket);
+		void		write_to_client(std::vector<Client *>::iterator &it, int client_socket);
 		void		serve_connected_clients();
 		int			get_current_nfds() const;
 	public:

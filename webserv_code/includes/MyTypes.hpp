@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 13:46:58 by codespace         #+#    #+#             */
-/*   Updated: 2023/08/12 00:52:41 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/13 12:26:15 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,12 @@
 # define MY_TYPES_HPP
 
 # define HEADER_MAX_BUFFER_SIZE 8192
-# define READ_BUFFER_SIZE   1024
+# define READ_BUFFER_SIZE   8192
 
 # define SUCCESS 0
 # define ERROR 1
 # define PERMISSION_DENIED 2
-# define CGI_TIMEOUT 30
+# define CGI_TIMEOUT 25
 
 enum e_request_handling_step
 {
@@ -39,7 +39,7 @@ enum e_status
 
 enum e_temporary_storage_type
 {
-    RAM_BUFFER = 0, FILE
+    RAM_BUFFER = 0, FILE_BUFFER
 };
 
 enum e_status_code

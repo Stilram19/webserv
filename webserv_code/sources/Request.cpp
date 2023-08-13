@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 18:25:35 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/12 16:13:27 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/13 07:43:05 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,7 @@ int Request::get_http_method(const std::string &method)
 
 void    Request::request_uri_parsing()
 {
-    if (_request_uri.length() > REQUEST_HEADER_BUFFER_SIZE)
+    if (_request_uri.length() > HEADER_MAX_BUFFER_SIZE)
         throw REQUEST_URI_TOO_LONG;
 
     // Extracting the uri components
@@ -146,10 +146,12 @@ void    Request::request_uri_parsing()
     if (start != std::string::npos)
     {
         _query_string = _request_uri.substr(start, end - start);
+        _query_string = _query_string.c_str() + 1;
         percent_decoding(_query_string);
         end = start;
     }
     _resource_logical_path = _request_uri.substr(0, end);
+    std::cout << "RESOURCE LOGICAL PATH: " << _resource_logical_path << std::endl;
     percent_decoding(_resource_logical_path);
 }
 
@@ -219,6 +221,7 @@ void		Request::set_virtual_server()
     {
         _VServer = _VServers.front();
     }
+    std::cout << "Vs Request: " << _VServer << std::endl;
 }
 
 void    Request::set_location()
@@ -237,7 +240,6 @@ void    Request::set_location()
 
 void    Request::set_physical_resource_path()
 {
-    size_t      location_key_len = _location_key.length();
     std::string relative_path = _resource_logical_path.c_str() + _location_key.length();
 
     _resource_physical_path = _location->get_root_path();
@@ -248,6 +250,9 @@ void    Request::set_physical_resource_path()
         && relative_path[0] != '/')
         _resource_physical_path += '/';
     _resource_physical_path += relative_path;
+
+    if (!FileHandler::is_resource_path_found(_resource_physical_path.c_str()))
+        throw NOT_FOUND;
 }
 
 void    Request::extracting_body_headers()
@@ -397,10 +402,10 @@ void    Request::append_chunk_to_body_file(const char *body_chunk, size_t read_b
 
 void    Request::open_body_file()
 {
-    if (FileHandler::random_file_generation(_body_file_path, _location->get_upload_path()))
+    if (FileHandler::random_file_name_generation(_body_file_path, _location->get_upload_path()))
         throw INTERNAL_SERVER_ERROR;
 
-    _body_fd = open(body_file_path, O_CREAT | O_RDWR, 0666);
+    _body_fd = open(_body_file_path.c_str(), O_CREAT | O_RDWR, 0666);
 
     if (_body_fd == -1)
         throw INTERNAL_SERVER_ERROR;
@@ -483,6 +488,13 @@ void    Request::header_parser()
         // open the upload file
         open_body_file();
 
+        if (!transfer_encoding_chunked && !_content_length)
+        {
+            close_body_file();
+            _status = NORMAL_TERM;
+            return ;
+        }
+
         std::cout << "CONSUMED BODY BYTES: " << _consumed_body_bytes_size <<  std::endl;
         if (_consumed_body_bytes_size)
             extract_body_chunk(_consumed_body_bytes->c_str(), _consumed_body_bytes->length());
@@ -508,7 +520,7 @@ void    Request::body_reader()
 
 // **************** GETTERS ****************
 
-bool Request::get_status() const
+int Request::get_status() const
 {
     return (_status);
 }
@@ -543,11 +555,11 @@ const std::string   &Request::get_body_file_path() const
     return  (_body_file_path);
 }
 
-const std::string   &Request::get_content_length() const
+std::string Request::get_content_length() const
 {
     try
     {
-        const std::string &content_length = _request_headers.at("content-length").back();
+        std::string content_length = _request_headers.at("content-length").back();
 
         return (content_length);
     }

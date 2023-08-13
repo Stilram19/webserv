@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:22:49 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/12 17:30:30 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/13 12:15:05 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,16 @@
 
 // Constructor & Destructor
 Response::Response(int client_socket, Request *request) : _is_there_index(false),  _cgi_flag(false), _is_response_header_sent(false), _status(WORKING), \
-    _temporary_storage_type(FILE), _handling_station(MAIN_PROCESSING), _cgi_pid(0), _body_fd(-1), _status_code(OK), _cgi_start_time(0), _request(request)
+    _temporary_storage_type(FILE_BUFFER), _handling_station(MAIN_PROCESSING), _cgi_pid(0), _body_fd(-1), _status_code(OK), _cgi_start_time(0), _request(request)
 {
     _client_socket = client_socket;
     _VServer = request->get_server();
     _location = request->get_location();
     _request_method = request->get_request_method();
     _resource_physical_path = request->get_physical_resource_path();
+    _resource_logical_path = request->get_logical_resource_path();
+    std::cout << "Resource Physical Path: " << _resource_physical_path << std::endl;
+    std::cout << "Resource Logical Path: " << _resource_logical_path << std::endl;
     _request_body_file_path = request->get_body_file_path();
 
     // Mapping the response handling stations to their corresponding methods
@@ -102,10 +105,20 @@ Response::Response(int client_socket, Request *request) : _is_there_index(false)
 
 Response::~Response()
 {
+    if (_body_fd != -1)
+        close(_body_fd);
 
+    // in case of cgi, removing the response body file name (randomly generated in /tmp)
+    if (_cgi_flag)
+        unlink(_response_body_file_name.c_str());
 }
 
 // ******************* HELPERS *******************
+
+bool    Response::is_there_index_file() const
+{
+    return (_is_there_index);
+}
 
 bool    Response::is_directory_listing_on() const
 {
@@ -114,11 +127,19 @@ bool    Response::is_directory_listing_on() const
 
 void    Response::extracting_index_file()
 {
-    _index_file = _location->get_index_file(_resource_physical_path);
+    std::string _index_file_name = _location->get_index_file(_resource_physical_path);
 
     // return if no index file was found
-    if (_index_file.empty())
+    if (_index_file_name.empty())
         return ;
+
+    // setting the index physical path.
+    _index_physical_path = _resource_physical_path + _index_file_name;
+    _index_logical_path = _resource_logical_path + _index_file_name;
+
+    // std::cout << "INDEX PH" << _index_physical_path << std::endl;
+    // std::cout << "INDEX LO" << _index_logical_path << std::endl;
+
     _is_there_index = true;
 }
 
@@ -136,7 +157,7 @@ void    Response::redirect_cgi_input() const
 
 void    Response::redirect_cgi_output()
 {
-    int fd = open(_response_body_file_name.c_str(), O_WRONLY);
+    int fd = open(_response_body_file_name.c_str(), O_CREAT | O_WRONLY, 0666);
 
     if (fd == -1)
         throw INTERNAL_SERVER_ERROR;
@@ -146,15 +167,36 @@ void    Response::redirect_cgi_output()
         throw INTERNAL_SERVER_ERROR;
 }
 
-void    Response::cgi_environment_setup(const std::string &script_path)
+const std::string   &Response::get_script_name() const
+{
+    if (is_there_index_file())
+        return (_index_logical_path);
+    return (_request->get_logical_resource_path());
+}
+
+const std::string   &Response::get_path_info() const
+{
+    if (is_there_index_file())
+        return (_index_logical_path);
+    return (_request->get_logical_resource_path());
+}
+
+const std::string   &Response::get_script_filename() const
+{
+    if (is_there_index_file())
+        return (_index_physical_path);
+    return (_request->get_physical_resource_path());
+}
+
+void    Response::cgi_environment_setup()
 {
     // manual variable setting
     _cgi_env_vector.push_back("REQUEST_METHOD=" + _request_method);
     _cgi_env_vector.push_back("SERVER_PROTOCOL=" + _request->get_protocol_version());
     _cgi_env_vector.push_back("QUERY_STRING=" + _request->get_query_string());
-    _cgi_env_vector.push_back("SCRIPT_NAME=" + _request->get_logical_resource_path());
-    _cgi_env_vector.push_back("PATH_INFO=" + _request->get_logical_resource_path());
-    _cgi_env_vector.push_back("SCRIPT_FILENAME=" + _request->get_physical_resource_path());
+    _cgi_env_vector.push_back("SCRIPT_NAME=" + get_script_name());
+    _cgi_env_vector.push_back("PATH_INFO=" + get_path_info());
+    _cgi_env_vector.push_back("SCRIPT_FILENAME=" + get_script_filename());
     _cgi_env_vector.push_back("REDIRECT_STATUS=200");
     _cgi_env_vector.push_back("REQUEST_URI=" + _request->get_request_uri());
 
@@ -171,7 +213,7 @@ void    Response::cgi_environment_setup(const std::string &script_path)
         ParsingHelpers::str_tr(header_key, '-', '_');
         header_key += '=';
 
-        if (it->first == "content-length" || it->first == "content-type")
+        if (it->first == "Content-Length" || it->first == "Content-Type")
         {
             _cgi_env_vector.push_back(header_key + it->second.back());
             continue ;
@@ -180,8 +222,10 @@ void    Response::cgi_environment_setup(const std::string &script_path)
         // adding the HTTP_ prefix
         header_key = "HTTP_" + header_key;
 
+        std::cout << "KEYYYYYY: " << header_key << std::endl;
+
         // extracting the value
-        for (std::vector<std::string>::const_iterator it1 = it->second.begin(); it1 != it->second.end(); it++)
+        for (std::vector<std::string>::const_iterator it1 = it->second.begin(); it1 != it->second.end(); it1++)
         {
             header_value += (*it1);
             if (it1 + 1 != it->second.end())
@@ -224,11 +268,14 @@ void    Response::regular_file_handler(const std::string &regular_file)
     _status_code = OK;
     _response_body_file_name = _resource_physical_path;
 
+    if (is_there_index())
+        _response_body_file_name = _index_physical_path;
+
     // the body is all there
     respond();
 }
 
-const std::string   &Response::get_connection() const
+std::string   Response::get_connection() const
 {
     if (_request->is_connect_keep_alive())
         return ("keep-alive");
@@ -245,36 +292,7 @@ bool    Response::is_status_code_message(const std::string &status_code_message)
     return (false);
 }
 
-size_t    Response::cgi_response_line_parsing(const std::string &cgi_header_buffer)
-{
-    size_t pos = cgi_header_buffer.find("\r\n");
-
-    if (pos == std::string::npos)
-        throw BAD_GATEWAY;
-    std::string response_line = cgi_header_buffer.substr(0, pos);
-
-    pos = cgi_header_buffer.find(' ');
-
-    if (pos == std::string::npos)
-        throw BAD_GATEWAY;
-
-    std::string protocol_version = response_line.substr(0, pos);
-
-    if (protocol_version != "HTTP/1.1")
-        throw BAD_GATEWAY;
-
-    std::string status_code_message = response_line.substr(pos + 1);
-
-    if (!is_status_code_message(status_code_message))
-        throw BAD_GATEWAY;
-
-    // After passing the test ==> adding the cgi response line to the response_header_buffer
-    _response_header_buffer += response_line + "\r\n";
-
-    return (response_line.length() + 2);
-}
-
-const std::string   &Response::extract_cgi_response_headers()
+void Response::extract_cgi_response_headers()
 {
     // Since the cgi output is all there, we can read the whole header with the max size expected.
     char    buffer[HEADER_MAX_BUFFER_SIZE + 1];
@@ -291,26 +309,27 @@ const std::string   &Response::extract_cgi_response_headers()
     if (read_bytes == -1)
         throw INTERNAL_SERVER_ERROR;
 
+    // std::cout << "BUFFER: " << buffer << std::endl;
     std::string _cgi_header_buffer = buffer;
 
     // if the header is not all there ==> BAD GATEWAY
     size_t pos;
 
-    if ((pos = _cgi_header_buffer.find("\r\n\r\n") == std::string::npos))
+    if ((pos = _cgi_header_buffer.find("\r\n\r\n")) == std::string::npos)
         throw BAD_GATEWAY;
-
+    std::cout << "POSITION: " << pos << std::endl;
     // Header and body separation
     _cgi_header_buffer = _cgi_header_buffer.substr(0, pos + 4);
     lseek(_body_fd, _cgi_header_buffer.length() - read_bytes, SEEK_CUR);
 
-    // response line
-    pos = cgi_response_line_parsing(_cgi_header_buffer);
-
     // cgi headers
-    cgi_headers_parsing(_cgi_header_buffer, pos);
+    cgi_headers_parsing(_cgi_header_buffer, 0);
+
+    if (_response_headers.find("Content-Type") == _response_headers.end())
+        throw BAD_GATEWAY;
 }
 
-const std::string   &Response::get_content_type() const
+std::string   Response::get_content_type() const
 {
     // checking if the body is html
     if (_temporary_storage_type == RAM_BUFFER)
@@ -330,34 +349,28 @@ const std::string   &Response::get_content_type() const
     }
 }
 
-const std::string   &Response::get_content_length() const
+std::string   Response::get_content_length()
 {
     int                 c_length = 0;
-    int                 fd;
     std::string         ret;
     std::stringstream   s;
 
     if (_temporary_storage_type == RAM_BUFFER)
         c_length = _body_buffer.length();
-    if (_temporary_storage_type == FILE)
+    if (_temporary_storage_type == FILE_BUFFER)
     {
-        if (_cgi_flag)
-            fd = _body_fd;
-
-        if (!_cgi_flag && (fd = open(_response_body_file_name.c_str(), O_RDONLY)) == -1)
+        if (!_cgi_flag && (_body_fd = open(_response_body_file_name.c_str(), O_RDONLY)) == -1)
             throw INTERNAL_SERVER_ERROR;
 
         int     read_bytes;
         char    buffer[READ_BUFFER_SIZE + 1];
 
-        while ((read_bytes = read(fd, buffer, READ_BUFFER_SIZE)) > 0)
+        while ((read_bytes = read(_body_fd, buffer, READ_BUFFER_SIZE)) > 0)
             c_length += read_bytes;
         if (read_bytes == -1)
             throw INTERNAL_SERVER_ERROR;
-        if (_cgi_flag)
-            lseek(fd, -1 * c_length, SEEK_CUR);
-        else
-            close(fd);
+
+        lseek(_body_fd, -1 * c_length, SEEK_CUR);
     }
     s << c_length;
     s >> ret;
@@ -378,6 +391,10 @@ void    Response::cgi_headers_parsing(const std::string &cgi_header_buffer, size
         if (end == std::string::npos)
             throw BAD_GATEWAY;
         key = cgi_header_buffer.substr(start, end - start);
+        if (key == "Content-type")
+            key = "Content-Type";
+        if (key == "Content-length")
+            key = "Content-Length";
         start = ParsingHelpers::skip_blank(cgi_header_buffer.c_str(), end + 1);
         end = cgi_header_buffer.find("\r\n", start);
         if (end == std::string::npos)
@@ -401,14 +418,45 @@ void    Response::cgi_headers_parsing(const std::string &cgi_header_buffer, size
         throw BAD_GATEWAY;
 }
 
-void    Response::clean_up() const
+void    Response::send_ram_buffer(const std::string &buffer)
 {
-    if (_body_fd != -1)
-        close(_body_fd);
+    int sent_bytes = write(_client_socket, buffer.c_str(), buffer.length());
 
-    // in case of cgi, removing the response body file name (randomly generated in /tmp)
-    if (_cgi_flag)
-        unlink(_response_body_file_name.c_str());
+    // Checking if the client disconnected
+    if (sent_bytes <= 0)
+        throw CLIENT_DISCONNECT;
+}
+
+void    Response::send_body_file_chunk()
+{
+    int     read_bytes, sent_bytes;
+    char    body_chunk_buffer[READ_BUFFER_SIZE + 1];
+
+    // reading the body chunk
+    read_bytes = read(_body_fd, body_chunk_buffer, READ_BUFFER_SIZE);
+
+    // if (read_bytes == -1)
+    //     std::cout << "HEEEEEERE" << std::endl;
+
+    body_chunk_buffer[read_bytes] = '\0';
+
+    if (read_bytes == 0)
+    {
+        _status = NORMAL_TERM;
+        return ;
+    }
+
+    // sending the body chunk
+    // std::cout << body_chunk_buffer << std::endl;
+    sent_bytes = write(_client_socket, body_chunk_buffer, read_bytes);
+
+    if (sent_bytes <= 0)
+        throw CLIENT_DISCONNECT;
+}
+
+bool    Response::is_there_index() const
+{
+    return (_is_there_index);
 }
 
 // ********************* GETTERS *********************
@@ -416,11 +464,6 @@ void    Response::clean_up() const
 int Response::get_status() const
 {
     return (_status);
-}
-
-bool    Response::is_there_index() const
-{
-    return (_is_there_index);
 }
 
 // ********************* RESPONSE SENDING *********************
@@ -437,25 +480,22 @@ void    Response::respond()
 void    Response::produce_response_header()
 {
     // Response line
-    if (!_cgi_flag)
-    {
-        _response_header_buffer = _request->get_protocol_version();
-        _response_header_buffer += " ";
-        _response_header_buffer += _status_code_messages[_status_code];
-        _response_header_buffer += "\r\n";
-    }
+    _response_header_buffer = "HTTP/1.1 ";// here
+    _response_header_buffer += _status_code_messages[_status_code];
+    _response_header_buffer += "\r\n";
 
     // Extracting the cgi response headers
-    if (_cgi_flag)
+    if (_cgi_flag && _temporary_storage_type == FILE_BUFFER)
         extract_cgi_response_headers();
 
     // Setting important headers, after checking if not specified already by the cgi.
-    if (_response_headers.find("Content-Type") == _response_headers.end())
+    if (_response_headers.find("Content-Type") == _response_headers.end() 
+        || _status_code == BAD_GATEWAY || _status_code == GATEWAY_TIMEOUT)
         _response_headers["Content-Type"] = get_content_type();
-    if (_response_headers.find("Content-Length") == _response_headers.end())
+    if (_response_headers.find("Content-Length") == _response_headers.end()
+        || _status_code == BAD_GATEWAY || _status_code == GATEWAY_TIMEOUT)
         _response_headers["Content-Length"] = get_content_length();
-    if (_response_headers.find("Connection") == _response_headers.end())
-        _response_headers["Connection"] = get_connection();
+    _response_headers["Connection"] = "close";
 
     // Checking if there is a redirection
     if (_status_code == MOVED_PERMANENTLY)
@@ -469,7 +509,7 @@ void    Response::produce_response_header()
         key = it->first;
         value = it->second;
         _response_header_buffer += key;
-        _response_header_buffer += ' ';
+        _response_header_buffer += ": ";
         _response_header_buffer += value;
         _response_header_buffer += "\r\n";
     }
@@ -482,16 +522,16 @@ void    Response::produce_html_for_status_code()
 {
     _temporary_storage_type = RAM_BUFFER;
 
-    std::string html_file_name = _VServer->get_error_page(_status_code);
+    std::string html_file_name;
+
+    if (_VServer)
+        html_file_name = _VServer->get_error_page(_status_code);
 
     if (!html_file_name.empty())
     {
         // opening the html file
         std::string     buffer;
         std::ifstream   input_stream(html_file_name.c_str());
-
-        if (!input_stream.is_open())
-            throw INTERNAL_SERVER_ERROR;
 
         while (std::getline(input_stream, buffer))
             _body_buffer += buffer;
@@ -519,6 +559,7 @@ void    Response::produce_html_for_status_code()
     catch (std::exception &e)
     {
         std::cerr << "***********NO DEFAULT PAGE FOR THIS STATUS CODE***********" << std::endl;
+        return ;
     }
 }
 
@@ -565,7 +606,7 @@ void    Response::produce_html_for_directory_listing()
 void    Response::cgi(const std::string &script_path, const std::string &cgi_interpreter)
 {
     // Setting the environment variables needed in the cgi
-    cgi_environment_setup(script_path);
+    cgi_environment_setup();
 
     // using c style for execve
    char **env = new char *[_cgi_env_vector.size() + 1];
@@ -594,6 +635,10 @@ void    Response::cgi(const std::string &script_path, const std::string &cgi_int
     // spowning the cgi process
     _cgi_pid = fork();
 
+    if (_cgi_pid)
+        sleep(1);
+    std::cout << "PID: " << _cgi_pid << std::endl;
+
     if (_cgi_pid == -1)
         throw INTERNAL_SERVER_ERROR;
 
@@ -615,7 +660,6 @@ void    Response::cgi(const std::string &script_path, const std::string &cgi_int
     }
 
     // releasing the memory in the parent.
-    delete [] args;
     delete [] env;
 
     // switching the reposonse handling station to 'waiting for cgi'
@@ -641,7 +685,7 @@ void    Response::get_handler()
     // giving the priority to the index file.
     if (is_there_index())
     {
-        regular_file_handler(_index_file);
+        regular_file_handler(_index_physical_path);
         return ;
     }
 
@@ -668,7 +712,7 @@ void    Response::post_handler()
     if (!is_there_index())
         throw FORBIDDEN;
 
-    regular_file_handler(_index_file);
+    regular_file_handler(_index_physical_path);
 }
 
 void    Response::delete_handler()
@@ -686,6 +730,8 @@ void    Response::delete_handler()
                 throw FORBIDDEN;
             throw INTERNAL_SERVER_ERROR;
         }
+        _status_code = NO_CONTENT;
+        produce_html_for_status_code();
         return ;
     }
 
@@ -716,7 +762,7 @@ void    Response::main_processing()
 
     if (!_redirection.empty())
     {
-        _status = MOVED_PERMANENTLY;
+        _status_code = MOVED_PERMANENTLY;
         produce_html_for_status_code();
         return ;
     }
@@ -724,13 +770,18 @@ void    Response::main_processing()
     // preliminary tests if the resource is a directory
     if (FileHandler::is_directory(_resource_physical_path.c_str()))
     {
+        // Checking read permission (it's mandatory in all methods)
+        if (access(_resource_physical_path.c_str(), R_OK))
+            throw FORBIDDEN;
+
         // Redirecting to the same directory path, terminated by '/'.
         if (_resource_physical_path[_resource_physical_path.length() - 1] != '/')
         {
-            _redirection = _resource_physical_path + '/';
-            _status = MOVED_PERMANENTLY;
+            _redirection = _resource_logical_path + '/';
+            std::cout << "NEW PATH: " << _redirection << std::endl;
+            _status_code = MOVED_PERMANENTLY;
             if (_request_method == "DELETE")
-                _status = CONFLICT;
+                _status_code = CONFLICT;
             produce_html_for_status_code();
             return ;
         }
@@ -750,14 +801,8 @@ void    Response::wait_for_cgi()
     int status;
     int ret = waitpid(_cgi_pid, &status, WNOHANG);
 
-    if (ret != -1)
-    {
-        kill(_cgi_pid, SIGTERM);
-        throw INTERNAL_SERVER_ERROR;
-    }
-
     // if the cgi is still running
-    if (ret == 0)
+    if (ret <= 0)
     {
         struct timeval	t;
         size_t          curr_time;
@@ -780,43 +825,15 @@ void    Response::wait_for_cgi()
     respond();
 }
 
-void    Response::send_ram_buffer(const std::string &buffer)
-{
-    int sent_bytes = write(_client_socket, buffer.c_str(), buffer.length());
-
-    // Checking if the client disconnected
-    if (sent_bytes <= 0)
-        throw CLIENT_DISCONNECT;
-}
-
-void    Response::send_body_file_chunk()
-{
-    int     read_bytes, sent_bytes;
-    char    body_chunk_buffer[READ_BUFFER_SIZE + 1];
-
-    // reading the body chunk
-    read_bytes = read(_body_fd, body_chunk_buffer, READ_BUFFER_SIZE);
-    body_chunk_buffer[read_bytes] = '\0';
-
-    if (read_bytes == 0)
-    {
-        _status = NORMAL_TERM;
-        return ;
-    }
-
-    // sending the body chunk
-    sent_bytes = write(_client_socket, body_chunk_buffer, read_bytes);
-
-    if (send_bytes <= 0)
-        throw CLIENT_DISCONNECT;
-}
-
 void    Response::response_sending()
 {
     // (*) sending the header once
     if (!_is_response_header_sent)
     {
+        std::cout << ANSI_COLOR_MAGENTA << "Response Header:" << ANSI_COLOR_RESET << std::endl;
+        std::cout << _response_header_buffer << std::endl;
         send_ram_buffer(_response_header_buffer);
+        std::cout << "RESPONSE HEADER SENT!" << std::endl;
         _is_response_header_sent = true;
         return ;
     }
@@ -826,17 +843,21 @@ void    Response::response_sending()
     // send it once, if it's a small html body that is stored in a RAM buffer
     if (_temporary_storage_type == RAM_BUFFER)
     {
+        // std::cout << _body_buffer << std::endl;
         send_ram_buffer(_body_buffer);
+        std::cout << "HTML BODY SENT!" << std::endl;
+        _status = NORMAL_TERM;
         return ;
     }
 
     // send it chunk by chunk, if it's stored premanently in a file
     send_body_file_chunk();
+    std::cout << "BODY CHUNK SENT!" << std::endl;
 }
 
 // ********************* MAIN FUNCTION *********************
 
-void    Response::Response_handling()
+void    Response::response_handling()
 {
     try
     {
@@ -852,6 +873,7 @@ void    Response::Response_handling()
             _status = BAD_TERM;
             return ;
         }
+        std::cout << "Caught status code: " << error_type << std::endl;
         _status_code = error_type;
         produce_html_for_status_code();
     }

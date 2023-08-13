@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 17:08:37 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/10 23:53:13 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/13 11:39:46 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,6 +132,7 @@ void Location::set_cgi_handler(const std::string &input)
 	extension = input.substr(start, end - start);
 	start = ParsingHelpers::skip_blank(input.c_str(), end);
 	cgi_interpret = input.substr(start);
+
 	if (access(cgi_interpret.c_str(), F_OK | X_OK))
 		throw std::runtime_error("Invalid cgi interpreter!");
 
@@ -204,21 +205,32 @@ std::string	Location::get_cgi_handler(const std::string &extension) const
 	}
 }
 
-const std::string	&Location::get_index_file(const std::string &root) const
+std::string	Location::get_index_file(const std::string &root) const
 {
 	for (std::vector<std::string>::const_iterator it = _indices.begin(); it != _indices.end(); it++)
 	{
+		std::string	index_name;
 		std::string index = (*it);
 
 		// if the index is a relative path, join it with the root to have a full path.
 		if (index[0] != '/')
+		{
+			index_name = index;
 			index = root + index;
+		}
 
-		// checking if it's a regular file with read access
-		if (access(index.c_str(), F_OK | R_OK))
+		if (index[0] == '/' && index.length() <= root.length())
 			continue ;
+
+		if (index[0] == '/' && strncmp(index.c_str(), root.c_str(), root.length()))
+			continue ;
+
 		if (FileHandler::is_regular_file(index.c_str()))
-			return (*it);
+		{
+			if (index[0] == '/')
+				index_name = index.c_str() + root.length();
+			return (index_name);
+		}
 	}
 	// returning an empty string to indicate that no index file was found
 	return ("");

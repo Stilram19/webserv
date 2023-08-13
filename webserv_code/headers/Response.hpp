@@ -6,7 +6,7 @@
 /*   By: obednaou <obednaou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 19:23:05 by obednaou          #+#    #+#             */
-/*   Updated: 2023/08/12 17:16:03 by obednaou         ###   ########.fr       */
+/*   Updated: 2023/08/13 11:54:16 by obednaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 # include "include.hpp"
 
 class Request;
+class VirtualServer;
+class Location;
 
 class Response
 {
@@ -31,7 +33,7 @@ class Response
         int                                         _status;
         int                                         _temporary_storage_type;
         int                                         _handling_station;
-        int                                         _cgi_pid;
+        pid_t                                       _cgi_pid;
         int                                         _body_fd;
         e_status_code                               _status_code;
         int                                         _client_socket;
@@ -41,8 +43,10 @@ class Response
         Location                                    *_location;
         std::string                                 _request_method;
         std::string                                 _resource_physical_path;
+        std::string                                 _resource_logical_path;
         std::string                                 _response_body_file_name;
-        std::string                                 _index_file;
+        std::string                                 _index_logical_path;
+        std::string                                 _index_physical_path;
         std::string                                 _body_buffer;
         std::string                                 _redirection;
         std::string                                 _request_body_file_path;
@@ -72,22 +76,24 @@ class Response
         void                extracting_index_file();
         void                redirect_cgi_input() const;
         void                redirect_cgi_output();
+        const std::string   &get_script_name() const;
+        const std::string   &get_path_info() const;
+        const std::string   &get_script_filename() const;
         void                regular_file_handler(const std::string &regular_file);
-        void                cgi_environment_setup(const std::string &script_path);
-        const std::string   &get_connection() const;
+        void                cgi_environment_setup();
+        std::string         get_connection() const;
         bool                is_status_code_message(const std::string &status_code_message) const;
-        size_t              cgi_response_line_parsing(const std::string &cgi_header_buffer);
-        const std::string   &extract_cgi_response_headers();
-        const std::string   &get_content_type() const;
-        const std::string   &get_content_length() const;
+        void                extract_cgi_response_headers();
+        std::string         get_content_type() const;
+        std::string         get_content_length();
         void                cgi_headers_parsing(const std::string &cgi_header_buffer, size_t start);
+        void                send_ram_buffer(const std::string &buffer);
+        void                send_body_file_chunk();
+        bool                is_there_index() const;
 
-        void                clean_up() const;
-
-    private:
+    public:
         // Getters
         int     get_status() const;
-        bool    is_there_index() const;
 
     private:
         // Response Construction
@@ -114,9 +120,11 @@ class Response
 
     public:
         // Main Function
-        void    Response_handling();
+        void    response_handling();
 };
 
 # include "Request.hpp"
+# include "Location.hpp"
+# include "VirtualServer.hpp"
 
 #endif

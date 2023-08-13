@@ -22,7 +22,7 @@ NAME=	$(BUILD)/webserv
 ARGS=	$(CONFIG)
 
 #FLAGS
-CPPFLAGS=	-I $(HEADERS) -I $(INCLUDES) -Wall -Wextra -Werror -std=c++98
+CPPFLAGS=	-I $(HEADERS) -I $(INCLUDES) -Wall -Wextra -Werror -std=c++98 #-fsanitize=address -g
 DEPFLAGS=	-MMD -MP -MT $(OBJS_DIR)/$*.o -MF $(DEPS_DIR)/$*.d
 
 #COMPILER
