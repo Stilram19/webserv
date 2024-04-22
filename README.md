@@ -57,9 +57,10 @@ During the development of this project, We've learned several important concepts
 
 3. Configure the server:
     for reference consult the [subject.](https://cdn.intra.42.fr/pdf/pdf/109738/en.subject.pdf)
-    the default config file is config/default.conf
+    the default config file is config/default.conf.
+   if you need to change the config file, go to Makefile and assign the new filepath to the ARGS variable.
 
-4. Compile and Run the program:
+5. Compile and Run the server:
 
    ``` bash
    make run
