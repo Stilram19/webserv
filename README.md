@@ -29,7 +29,7 @@ Implemented a comprehensive response handling mechanism to generate appropriate 
 
 During the development of this project, We've learned several important concepts including:
 
-- **C++ Programming**: Enhancing proficiency in C++ programming language, including memory management, data structures...
+- **C++ Programming**: Enhancing proficiency in C++ programming language, including memory management, data structures, OOP...
 
 - **Networking Concepts**: Gaining a deeper understanding of networking concepts such as TCP/IP, HTTP, sockets programming, and network protocols.
 
