@@ -84,7 +84,7 @@ int	WebservCore::create_socket(const std::string &hostname, const std::string &p
 	// Setting the SO_REUSEADDR and SO_NOSIGPIPE flags at the SOL_SOCKET level.
 	int set_option_on = 1;
 	setsockopt(connection_socket,  SOL_SOCKET,  SO_REUSEADDR , &set_option_on, sizeof(set_option_on));
-    setsockopt(connection_socket,  SOL_SOCKET,  SO_NOSIGPIPE, &set_option_on, sizeof(set_option_on));
+    // setsockopt(connection_socket,  SOL_SOCKET,  SO_NOSIGPIPE, &set_option_on, sizeof(set_option_on));
 
 	// Giving the socket a name
 	if (bind(connection_socket, res->ai_addr, res->ai_addrlen))
